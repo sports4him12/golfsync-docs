@@ -10,7 +10,13 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 <!-- New user-facing functionality to build -->
 
-- [ ] 
+- [ ] **Free tier by default** — New accounts are free and limited to tee time booking only. Tournament discovery and all friend/social features (friend requests, messaging, round invitations) are gated behind a paid membership. The free experience should make the value of upgrading obvious without being hostile.
+
+- [ ] **Membership selection during registration** — Integrate plan selection (Free / Monthly / Annual) directly into the account creation flow with Stripe payment inline. Users should not have to navigate to a separate `/membership` page after registering; the choice and payment (if upgrading) happen as part of sign-up.
+
+- [ ] **Admin-promoted courses and tournaments** — Admins can flag specific courses or tournaments as "featured." Featured items appear as highlighted cards at the top of the relevant section on the user's dashboard, filtered to the user's current home location. Courses and tournaments outside the user's area should not be surfaced.
+
+- [ ] **GolfNow cancellation handling** — Implement round cancellation according to GolfNow API requirements. Research GolfNow's cancellation policies (window, fees, confirmation flow) and mirror that logic in the `cancelRound` flow. Update the BPMN process and UI accordingly so users understand what happens when a booked tee time is cancelled.
 
 ---
 
@@ -42,7 +48,7 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 <!-- Refactors, test gaps, dependency updates, cleanup -->
 
-- [ ] 
+- [ ] **Migrate from Camunda 7 to FluxNova** — Camunda 7 reaches end of life; FluxNova (`org.finos.fluxnova.bpm.springboot`) is the target BPM runtime for long-term support. Replace the `org.camunda.bpm.springboot` starters, update BPMN process definitions as needed, and verify the `golf-round-booking-process` and `tournament-report-process` workflows behave identically. Note: FluxNova starters are not on Maven Central — confirm artifact repository before starting.
 
 ---
 
