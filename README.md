@@ -10,6 +10,7 @@ Central home for Par Party project documentation.
 | [architecture-parparty.md](architecture-parparty.md) | System architecture overview — services, data flow, tech stack |
 | [AWS_DeploymentGuide.md](AWS_DeploymentGuide.md) | Step-by-step guide for deploying Dev and Prod stacks to AWS via CDK |
 | [lean-canvas.md](lean-canvas.md) | Lean Canvas business plan — problem, solution, revenue, costs, metrics, and unfair advantage |
+| [requirements-todo.md](requirements-todo.md) | Living backlog — features, bugs, improvements, and tech debt to address over time |
 
 ## Repositories
 
