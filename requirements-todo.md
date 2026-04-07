@@ -10,7 +10,6 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 <!-- New user-facing functionality to build -->
 
-- [ ] **Free tier by default** — New accounts are free and limited to tee time booking only. Tournament discovery and all friend/social features (friend requests, messaging, round invitations) are gated behind a paid membership. The free experience should make the value of upgrading obvious without being hostile.
 
 - [ ] **Membership selection during registration** — Integrate plan selection (Free / Monthly / Annual) directly into the account creation flow with Stripe payment inline. Users should not have to navigate to a separate `/membership` page after registering; the choice and payment (if upgrading) happen as part of sign-up.
 
@@ -78,3 +77,4 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 | 2026-04-06 | Tournament type interest preferences (Scramble, Amateur, Charity, etc.) with localStorage persistence and preferred-first sorting |
 | 2026-04-06 | Live tournament discovery via Google Custom Search API with SGA site: queries, city/state forwarding, and 2-hour cache |
 | 2026-04-06 | Tournament self-registration ("I'm Going") with friend grouping — users mark themselves registered and add friends to the record; panel shows all upcoming registrations |
+| 2026-04-06 | Free tier by default — new accounts limited to tee time booking; friends/messaging/round invitations gated behind paid membership; upgrade banner on dashboard and full-page gates on friends/messages pages |
