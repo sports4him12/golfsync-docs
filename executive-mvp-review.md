@@ -30,7 +30,7 @@
 |---|---|---|
 | 2 | **Decide GolfNow integration or reposition** — negotiate GolfNow/Supreme Golf/TeeOff, or rebrand as "round management" | COO |
 | 3 | **3-step onboarding flow** — find home course → invite a friend → create first round | CMO |
-| 5 | **Instrument signup → paid conversion funnel** — trial-to-paid rate, churn by plan, CAC, ARPU, LTV | CFO |
+| 5 | ~~Instrument signup → paid conversion funnel~~ | ✅ CFO |
 
 > Items already closed: **(2a) Conversion funnel** — event instrumentation, drip email sequence, and in-app CTAs implemented 2026-04-07. **(2b) Referral mechanism** — referral codes, invite links, leaderboard, and 30-day credit implemented 2026-04-07.
 
@@ -210,6 +210,7 @@ No multi-region or failover. An outage during peak booking hours (Friday morning
 | 20 | Analytics dashboard — AnalyticsService queries user_events + users; KPI cards, 5-step funnel, 30-day daily signups; Analytics tab on /admin | ✅ 2026-04-07 |
 
 ### CFO
+- ✅ **Conversion funnel instrumentation** — `subscription_cancelled_monthly/annual` events fired on webhook; `countEventsByTypeInLastNDays` query; `AnalyticsDashboardResponse` extended with ARPU, LTV, monthly churn rate, churn by plan (30d), and new-paid-30d (for CAC); Revenue & Retention panel added to admin analytics tab. Trial-to-paid rate already existed as `conversionRate`.
 - ✅ **Free tier → 30-day trial** — Free tier eliminated. Full access from day one, no credit card required. Trial countdown on dashboard (amber ≤5 days, red on expiry). `TRIAL_EXPIRED` 403 redirects to `/membership`.
 - ✅ **Subscription webhooks** — `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`. HMAC signature verification. All five handlers idempotent. Payment-failed and cancellation emails sent.
 
