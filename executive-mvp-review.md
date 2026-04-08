@@ -41,9 +41,9 @@
 | 6 | Shareable round invite links | CMO |
 | 7 | Course leaderboard (top scores per course) | CMO |
 | 8 | Shareable score card (PNG export for Instagram/X) | CMO |
-| 9 | Move AI conversation state to Redis | CTO |
+| 9 | ~~Move AI conversation state to Redis~~ | ✅ CTO |
 | 10 | Expand tournament database to national coverage | COO |
-| 11 | Rate limit AI chat (5/min), search (30/min), tee time search (10/min) | CTO |
+| 11 | ~~Rate limit AI chat (5/min), search (30/min), tee time search (10/min)~~ | ✅ CTO |
 | 12 | GDPR: user self-deletion API | COO |
 
 ### Medium-Term (90–180 days)
@@ -110,8 +110,8 @@ Live discovery via Google CSE supplements the 12 seeded east-coast tournaments, 
 - Crowdsource via user-submitted tournament board (existing report workflow)
 - State golf association partnerships
 
-### ⬜ AI Conversation Memory Lost on Restart
-In-memory `HashMap` conversation history is not persisted. In a multi-task prod deployment, users hitting different ECS tasks get different memory. Redis required before real user scale.
+### ✅ AI Conversation Memory — Redis-backed
+`RedisChatMemoryStore` stores conversation history in ElastiCache with 24h TTL. Graceful fallback to in-process memory when `AI_REDIS_ENABLED=false` (local dev). Set `cfg.redisEnabled=true` in CDK to provision the ElastiCache cluster.
 
 ### 🔶 Observability Gaps
 CloudWatch structured logging and error alarms are in place, but still missing:
@@ -120,11 +120,8 @@ CloudWatch structured logging and error alarms are in place, but still missing:
 - Distributed tracing / correlation IDs
 - Route53 health checks and synthetic monitoring
 
-### ⬜ Rate Limiting Incomplete
-Auth endpoints are limited (now 10/min in prod via `RATE_LIMIT_MAX_REQUESTS` env var). Unprotected:
-- AI chat — a single user can generate significant OpenAI costs
-- Tournament search
-- User search
+### ✅ Rate Limiting — Complete
+Auth (10/min/IP), AI chat (5/min/user), user search (30/min/IP), tee-time search (10/min/IP). Separate sliding-window buckets per endpoint. Dev overrides via `RATE_LIMIT_*` env vars.
 
 ### ⬜ GDPR / Data Rights Gap
 No user self-deletion API. Admin hard-delete exists but users cannot delete their own accounts. Legal requirement in the EU; trust signal in the US.
@@ -206,6 +203,8 @@ No multi-region or failover. An outage during peak booking hours (Friday morning
 | — | Conversion funnel — event instrumentation, 5-step drip sequence, in-app CTAs | ✅ 2026-04-07 |
 | — | Referral mechanism — unique codes, invite links, friend leaderboard, 30-day credit | ✅ 2026-04-07 |
 | — | Stripe Checkout Session (subscription mode) — hosted checkout for recurring billing | ✅ 2026-04-07 |
+| 11 | Rate limit AI chat (5/min/user), user search (30/min/IP), tee-time search (10/min/IP) | ✅ 2026-04-07 |
+| 9 | Redis-backed AI conversation memory — RedisChatMemoryStore + ElastiCache CDK; graceful in-memory fallback | ✅ 2026-04-07 |
 
 ### CFO
 - ✅ **Free tier → 30-day trial** — Free tier eliminated. Full access from day one, no credit card required. Trial countdown on dashboard (amber ≤5 days, red on expiry). `TRIAL_EXPIRED` 403 redirects to `/membership`.
