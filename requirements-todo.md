@@ -66,6 +66,8 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 | Date | Item |
 |------|------|
+| 2026-04-08 | Landing page redesign — full feature showcase (6 feature cards), pricing section with Free Trial and Member plans visible on load, Member card routes to `/register?plan=member` which pre-selects membership flow on registration |
+| 2026-04-08 | CuratedTournamentRefreshService unit test coverage — 58 tests covering all public/private methods via reflection; 95.2% instruction, 84.2% branch, 96.1% line, 100% method coverage |
 | 2026-04-08 | Availability poll sharing — all accepted friends pre-selected by default when creating a poll; Select All / Deselect All toggle added; fixed friend username resolution bug |
 | 2026-04-08 | Nullable entry fee and format "Unavailable" sentinel — entry_fee column nullable (migration 033); TournamentResponse.entryFee boxed Double; refresh() sets null fee and "Unavailable" format when neither page scrape nor Serper yields a realistic value |
 | 2026-04-08 | Tournament location radius filter — removed Serper-discovered results (had hardcoded 0.0 mi distance) from listing endpoint; only curated tournaments with real coordinates returned |
