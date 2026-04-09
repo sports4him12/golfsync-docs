@@ -2,6 +2,8 @@
 
 Step-by-step checklist for deploying the Dev and Prod stacks using AWS CDK.
 
+**Last updated:** 2026-04-09
+
 ---
 
 ## Prerequisites
@@ -23,29 +25,36 @@ npx cdk bootstrap aws://YOUR_ACCOUNT_ID/us-east-1
 Find your account ID with: `aws sts get-caller-identity --query Account --output text`
 
 ### 3. Docker running
-CDK builds container images from source (`golfsync-api`, `golfsync-web`, `golfsync-server`) and pushes them to ECR. Docker must be running on your machine at deploy time.
+CDK builds container images from source (`golfsync-api`, `golfsync-web`) and pushes them to ECR. Docker must be running on your machine at deploy time.
+
+> **Note:** Camunda BPM is embedded in-process inside `golfsync-api` — there is no separate Camunda ECS service or container to build.
 
 ---
 
 ## Dev Stack (`GolfSyncDevStack`)
 
-### Step 1 — Deploy
+### Step 1 — Set required env vars
+```bash
+export GOLFSYNC_DEV_ALARM_EMAIL=you@example.com
+```
+
+### Step 2 — Deploy
 ```bash
 cd golfsync-cdk
 npx cdk deploy GolfSyncDevStack
 ```
 Note the `AppUrl` output — this is the ALB DNS name (e.g. `http://GolfSync-Alb-xxxx.us-east-1.elb.amazonaws.com`).
 
-### Step 2 — Update `appBaseUrl`
-Open `golfsync-cdk/bin/golfsync-cdk.ts` and update line 31:
+### Step 3 — Update `appBaseUrl`
+Open `golfsync-cdk/bin/golfsync-cdk.ts` and update the dev stack config:
 ```ts
 appBaseUrl: 'http://<ALB-DNS-NAME-FROM-OUTPUT>',
 ```
 Then redeploy: `npx cdk deploy GolfSyncDevStack`
 
-This URL is embedded in email invite links, so it must point to where the app is actually running.
+This URL is embedded in email invite links and the CAN-SPAM unsubscribe footer, so it must point to where the app is actually running.
 
-### Step 3 — Populate Gmail SMTP credentials
+### Step 4 — Populate Gmail SMTP credentials
 Generate a Gmail App Password: Google Account → Security → 2-Step Verification → App passwords
 
 ```bash
@@ -54,14 +63,16 @@ aws secretsmanager put-secret-value \
   --secret-string '{"username":"you@gmail.com","password":"xxxx xxxx xxxx xxxx"}'
 ```
 
-### Step 4 — Populate optional secrets
+> **Support email:** The current support address is `ryanrpick@gmail.com` (set in `application.properties`). Update `SUPPORT_EMAIL` in Secrets Manager or `application.properties` when a permanent `support@golfsync.com` address is ready.
+
+### Step 5 — Populate optional secrets
 ```bash
-# OpenAI (AI assistant feature)
+# Anthropic / OpenAI (AI navigation + booking assistant)
 aws secretsmanager put-secret-value \
   --secret-id golfsync-dev/openai-api-key \
   --secret-string 'sk-...'
 
-# Stripe test keys (payment feature)
+# Stripe test keys (payment feature — billing paused until June 1, 2026)
 aws secretsmanager put-secret-value \
   --secret-id golfsync-dev/stripe-secret-key \
   --secret-string 'sk_test_...'
@@ -78,65 +89,64 @@ aws secretsmanager put-secret-value \
 
 ## Prod Stack (`GolfSyncProdStack`)
 
-### Step 1 — Create a Route53 hosted zone for `golfsync.io`
-If `golfsync.io` is not already in Route53, create a hosted zone:
-- AWS Console → Route53 → Hosted Zones → Create hosted zone → `golfsync.io`
+### Step 1 — Create a Route53 hosted zone for `golfsync.com`
+If the domain is not already in Route53, create a hosted zone:
+- AWS Console → Route53 → Hosted Zones → Create hosted zone → `golfsync.com`
 - Update your domain registrar's nameservers to match the NS records Route53 provides.
 
 Find the hosted zone ID:
 ```bash
-aws route53 list-hosted-zones --query "HostedZones[?Name=='golfsync.io.'].Id" --output text
+aws route53 list-hosted-zones --query "HostedZones[?Name=='golfsync.com.'].Id" --output text
 # Returns something like: /hostedzone/Z1234ABCDE5678
 # The ID is the part after /hostedzone/
 ```
 
 ### Step 2 — Request an ACM certificate for HTTPS
-The ALB requires an ACM certificate to terminate TLS on port 443.
-
 ```bash
 # Request a certificate covering the apex and www subdomain
 aws acm request-certificate \
-  --domain-name golfsync.io \
-  --subject-alternative-names '*.golfsync.io' \
+  --domain-name golfsync.com \
+  --subject-alternative-names '*.golfsync.com' \
   --validation-method DNS \
   --region us-east-1
 
-# Get the certificate ARN (note it — you'll need it in the next step)
+# Get the certificate ARN
 aws acm list-certificates \
-  --query "CertificateSummaryList[?DomainName=='golfsync.io'].CertificateArn" \
+  --query "CertificateSummaryList[?DomainName=='golfsync.com'].CertificateArn" \
   --output text \
   --region us-east-1
 ```
 
-ACM will provide CNAME records for DNS validation. Add them to your Route53 hosted zone:
-- AWS Console → Certificate Manager → the new cert → "Create records in Route53" button
-- Or add the CNAME records manually in Route53
+ACM will provide CNAME records for DNS validation:
+- AWS Console → Certificate Manager → the new cert → "Create records in Route53"
 
-Wait for the certificate status to show **Issued** before deploying (usually 1–5 minutes after DNS records propagate).
+Wait for the certificate status to show **Issued** before deploying (usually 1–5 minutes after DNS propagation).
 
 ### Step 3 — Set env vars and deploy
 ```bash
-export PARPARTY_HOSTED_ZONE_ID=Z1234ABCDE5678
-export PARPARTY_CERT_ARN=arn:aws:acm:us-east-1:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export GOLFSYNC_HOSTED_ZONE_ID=Z1234ABCDE5678
+export GOLFSYNC_CERT_ARN=arn:aws:acm:us-east-1:123456789012:certificate/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+export GOLFSYNC_PROD_ALARM_EMAIL=you@example.com
+
 cd golfsync-cdk
 npx cdk deploy GolfSyncProdStack
 ```
 
 This creates:
-- Route53 A alias records: `golfsync.io` and `www.golfsync.io` → ALB
+- Route53 A alias records: `golfsync.com` and `www.golfsync.com` → ALB
 - ALB HTTPS listener on port 443 (TLS terminated using the ACM cert)
 - ALB HTTP listener on port 80 → permanent redirect to HTTPS
-- SES email identity for `golfsync.io` (outputs DNS verification records)
+- SES email identity for `golfsync.com` (outputs DNS verification records)
 
 ### Step 4 — Verify SES domain ownership
-After deploy, CDK outputs CNAME/TXT records for SES domain verification. Add them to your Route53 hosted zone:
-- AWS Console → Route53 → Hosted Zones → `golfsync.io` → Create record
-- Or use the AWS Console → SES → Verified Identities → `golfsync.io` → view the records
+After deploy, CDK outputs CNAME/TXT records for SES domain verification:
+- AWS Console → Route53 → Hosted Zones → `golfsync.com` → Create record
+- Or: AWS Console → SES → Verified Identities → `golfsync.com` → view the records
 
 Wait for SES to show the domain as **Verified** before expecting emails to send.
 
 ### Step 5 — Populate SES SMTP credentials
-Generate SES SMTP credentials: AWS Console → SES → SMTP Settings → Create SMTP credentials (creates an IAM user and derives SMTP password from the access key).
+Generate SES SMTP credentials: AWS Console → SES → SMTP Settings → Create SMTP credentials.
 
 ```bash
 aws secretsmanager put-secret-value \
@@ -146,12 +156,12 @@ aws secretsmanager put-secret-value \
 
 ### Step 6 — Populate optional secrets
 ```bash
-# OpenAI (AI assistant feature)
+# Anthropic / OpenAI (AI navigation + booking assistant)
 aws secretsmanager put-secret-value \
   --secret-id golfsync-prod/openai-api-key \
   --secret-string 'sk-...'
 
-# Stripe live keys (payment feature)
+# Stripe live keys — activate billing before June 1, 2026
 aws secretsmanager put-secret-value \
   --secret-id golfsync-prod/stripe-secret-key \
   --secret-string 'sk_live_...'
@@ -161,13 +171,19 @@ aws secretsmanager put-secret-value \
   --secret-string 'pk_live_...'
 ```
 
+> **Billing activation checklist (June 1, 2026):**
+> 1. Populate Stripe live keys above
+> 2. Register the prod webhook endpoint in Stripe dashboard → `https://golfsync.com/api/payments/webhook`
+> 3. Set `STRIPE_ENABLED=true` in the ECS task environment (CDK stack or Secrets Manager)
+> 4. Send pre-billing notification email to all users
+
 > **Auto-generated — no action needed:**
 > `golfsync-prod/db-credentials` and `golfsync-prod/jwt-secret` are generated by CDK automatically.
 
-### Step 7 — Request SES production access (if needed)
+### Step 7 — Request SES production access
 By default, SES accounts are in sandbox mode and can only send to verified addresses. To send to any address:
 - AWS Console → SES → Account dashboard → Request production access
-- Fill out the form explaining your use case (transactional email for a golf app)
+- Explain use case: transactional and marketing email for a golf social app; includes CAN-SPAM opt-out mechanism
 
 ---
 
@@ -177,22 +193,47 @@ By default, SES accounts are in sandbox mode and can only send to verified addre
 |---|---|---|
 | `golfsync-dev/db-credentials` | CDK (auto) | RDS MySQL password |
 | `golfsync-dev/jwt-secret` | CDK (auto) | JWT signing key |
-| `golfsync-dev/gmail-smtp-credentials` | You (Step 3) | Gmail app password for dev email |
-| `golfsync-dev/openai-api-key` | You (Step 4) | OpenAI API key |
-| `golfsync-dev/stripe-secret-key` | You (Step 4) | Stripe test secret key |
-| `golfsync-dev/stripe-publishable-key` | You (Step 4) | Stripe test publishable key |
+| `golfsync-dev/gmail-smtp-credentials` | You (Step 4) | Gmail app password for dev email |
+| `golfsync-dev/openai-api-key` | You (Step 5) | AI assistant API key |
+| `golfsync-dev/stripe-secret-key` | You (Step 5) | Stripe test secret key |
+| `golfsync-dev/stripe-publishable-key` | You (Step 5) | Stripe test publishable key |
 | `golfsync-prod/db-credentials` | CDK (auto) | RDS MySQL password |
 | `golfsync-prod/jwt-secret` | CDK (auto) | JWT signing key |
 | `golfsync-prod/ses-smtp-credentials` | You (Step 5) | SES SMTP credentials for prod email |
-| `golfsync-prod/openai-api-key` | You (Step 6) | OpenAI API key |
+| `golfsync-prod/openai-api-key` | You (Step 6) | AI assistant API key |
 | `golfsync-prod/stripe-secret-key` | You (Step 6) | Stripe live secret key |
 | `golfsync-prod/stripe-publishable-key` | You (Step 6) | Stripe live publishable key |
 
 ---
 
-## Accessing Camunda (internal service)
+## CDK Environment Variable Reference
 
-Camunda is not exposed publicly. Use ECS Exec to open a shell into the running task:
+| Variable | Stack | Purpose |
+|---|---|---|
+| `GOLFSYNC_DEV_ALARM_EMAIL` | Dev | CloudWatch alarm notification email |
+| `GOLFSYNC_PROD_ALARM_EMAIL` | Prod | CloudWatch alarm notification email |
+| `GOLFSYNC_HOSTED_ZONE_ID` | Prod | Route53 hosted zone ID for `golfsync.com` |
+| `GOLFSYNC_CERT_ARN` | Prod | ACM certificate ARN for HTTPS |
+
+---
+
+## Tearing Down
+
+```bash
+# Dev (safe to destroy — no deletion protection)
+cd golfsync-cdk
+npx cdk destroy GolfSyncDevStack
+
+# Prod (deletion protection is ON on RDS — must disable first)
+# AWS Console → RDS → Modify instance → uncheck deletion protection → apply immediately
+npx cdk destroy GolfSyncProdStack
+```
+
+---
+
+## ECS Exec (for debugging live containers)
+
+The API container (which embeds Camunda in-process) can be accessed via ECS Exec:
 
 ```bash
 # Dev
@@ -204,17 +245,4 @@ aws ecs execute-command --cluster golfsync-prod \
   --task <task-id> --interactive --command "/bin/sh"
 ```
 
-Find the task ID: AWS Console → ECS → Clusters → `golfsync-dev` → Tasks
-
----
-
-## Tearing Down
-
-```bash
-# Dev (safe to destroy — no deletion protection)
-npx cdk destroy GolfSyncDevStack
-
-# Prod (deletion protection is ON on RDS — must disable first)
-# AWS Console → RDS → Modify instance → uncheck deletion protection → apply immediately
-npx cdk destroy GolfSyncProdStack
-```
+Find the task ID: AWS Console → ECS → Clusters → `golfsync-dev` or `golfsync-prod` → Tasks

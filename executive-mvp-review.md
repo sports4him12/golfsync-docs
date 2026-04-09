@@ -1,6 +1,6 @@
 # GolfSync — Executive MVP Review
-**Prepared:** 2026-04-06 (CFO/COO/CMO) · Updated 2026-04-07 (CTO) · Restructured 2026-04-07  
-**Perspective:** CFO · COO · CMO · CTO  
+**Prepared:** 2026-04-06 (CFO/COO/CMO) · Updated 2026-04-07 (CTO) · Updated 2026-04-09 (full refresh)
+**Perspective:** CFO · COO · CMO · CTO
 **Purpose:** Identify what to change, cut, or double down on before scaling
 
 > **Legend:** ✅ Done · 🔶 Partial · ⬜ Open
@@ -11,229 +11,211 @@
 
 | Dimension | Rating | Notes |
 |---|---|---|
-| **Technical foundation** | ★★★★☆ | Security hardening, webhook infrastructure, trial model all solid |
-| **Product-market fit** | ★★★★☆ | Core social loop complete; invite links, leaderboard, referral program shipped; GolfNow still mocked |
-| **Monetization** | ★★★★☆ | Subscription lifecycle + Stripe Checkout Session mode + referral credit implemented |
-| **Growth engine** | ★★★★☆ | Trial drip sequence + referral codes + invite links + leaderboard all live |
+| **Technical foundation** | ★★★★☆ | Security hardening, CORS fixes, webhook infra, legal compliance all solid |
+| **Product-market fit** | ★★★★☆ | Core social loop complete; tee-time booking still mocked |
+| **Monetization** | ★★★☆☆ | Infrastructure ready; billing deliberately paused until June 1, 2026 launch period |
+| **Legal & compliance** | ★★★★☆ | Terms, Privacy, Cookie consent, CAN-SPAM opt-out, GolfNow non-affiliation all addressed |
+| **Growth engine** | ★★★☆☆ | Trial drip + invite links live; referral and tournaments hidden pending launch |
 | **Operations readiness** | ★★★★☆ | ~$150–190/month compute savings shipped; CI/CD still manual |
-| **MVP scope fit** | ★★★★★ | Conversion funnel and referral mechanism fully implemented |
+| **MVP scope fit** | ★★★★☆ | Conversion funnel built; launch trial period (5/31) is a deliberate business decision |
 
-**Bottom line:** The two most critical structural problems — no subscription lifecycle and a paywall blocking social activation — are both resolved. All immediate compute cost wins have been shipped. Items (2) and (3) are now closed: a full conversion funnel (event instrumentation + drip sequence + in-app CTAs) and referral mechanism (codes, invite links, leaderboard, 30-day credit) have been implemented. The remaining blocker is a real tee-time data source.
+**Bottom line:** The platform is functionally complete for an invite-based soft launch. The deliberate 5/31 free trial decision de-risks early user acquisition — everyone gets full access with no payment friction through May 31, 2026. The most critical remaining gap is still a real tee-time data source and the 3-step onboarding flow. Legal compliance (Terms, Privacy, Cookie consent, email opt-out, GolfNow disclaimer) has been addressed. Referral and Tournament features are built but held behind "Coming this Summer" teasers pending polish and national data coverage.
+
+---
+
+## Business Context — Launch Trial Decision
+
+**Decision (2026-04-09):** All features are free through May 31, 2026. No credit card is collected until June 1st.
+
+**Rationale:**
+- Removes all payment friction during the critical early-user acquisition window
+- Allows word-of-mouth growth before billing creates churn risk
+- Gives time to negotiate a real GolfNow API deal or pivot the positioning
+- Stripe infrastructure is live — flipping the switch on June 1 requires only confirming live keys and setting `STRIPE_ENABLED=true`
+
+**Implication:** Monthly/Annual plan cards are shown on the landing page and membership page with accurate, identical feature lists. Pricing is honest; no fake plan differentiation exists.
 
 ---
 
 ## Priority Action Plan — Open Items
 
-### Immediate (0–30 days)
+### Immediate (before June 1, 2026)
 
 | # | Action | Owner |
 |---|---|---|
-| 2 | **Decide GolfNow integration or reposition** — negotiate GolfNow/Supreme Golf/TeeOff, or rebrand as "round management" | COO |
+| 1 | **Activate billing** — confirm Stripe live keys in Secrets Manager, set `STRIPE_ENABLED=true` in prod, register webhook endpoint in Stripe dashboard, send pre-billing email to all users | CFO/CTO |
+| 2 | **Decide GolfNow integration or reposition** — negotiate GolfNow/Supreme Golf/TeeOff API, or rebrand as "round management" | COO |
 | 3 | **3-step onboarding flow** — find home course → invite a friend → create first round | CMO |
-| 5 | ~~Instrument signup → paid conversion funnel~~ | ✅ CFO |
+| 4 | **Update support email** — replace `ryanrpick@gmail.com` with a permanent `support@golfsync.com` address before public launch | COO |
 
-> Items already closed: **(2a) Conversion funnel** — event instrumentation, drip email sequence, and in-app CTAs implemented 2026-04-07. **(2b) Referral mechanism** — referral codes, invite links, leaderboard, and 30-day credit implemented 2026-04-07.
-
-### Near-Term (30–90 days)
+### Near-Term (post-June 1)
 
 | # | Action | Owner |
 |---|---|---|
-| 6 | ~~Shareable round invite links~~ | ✅ CMO |
-| 7 | Course leaderboard (top scores per course) | CMO |
-| 8 | Shareable score card (PNG export for Instagram/X) | CMO |
-| 9 | ~~Move AI conversation state to Redis~~ | ✅ CTO |
-| 10 | Expand tournament database to national coverage | COO |
-| 11 | ~~Rate limit AI chat (5/min), search (30/min), tee time search (10/min)~~ | ✅ CTO |
-| 12 | ~~GDPR: user self-deletion API~~ | ✅ COO |
+| 5 | **Launch Tournament Discovery** — restore feature when national data pipeline is ready | COO/CMO |
+| 6 | **Launch Refer a Friend** — restore dashboard widget and landing page CTA | CMO |
+| 7 | **Course leaderboard** — top scores per course | CMO |
+| 8 | **Shareable scorecard** — PNG export for Instagram/X | CMO |
+| 9 | **Full dunning sequence** — day 3 + day 7 follow-ups after failed payment; renewal reminder 7 days before expiry | CFO |
+| 10 | **Seasonal pricing evaluation** — $29.99/6 months, per-event $4.99, family/group plan | CFO |
 
 ### Medium-Term (90–180 days)
 
 | # | Action | Owner |
 |---|---|---|
-| 13 | Tournament entry fee commission (5–10%) | CFO |
-| 14 | Handicap calculation from round scores | CMO |
-| 15 | Web push notifications | CMO |
-| 16 | PWA with home screen install | CTO |
-| 17 | Referral program (1 month free per paid conversion) | CMO |
-| 18 | Seasonal pricing ($29.99 for 6 months) | CFO |
-| 19 | B2B pilot: sell to 2–3 golf clubs | CFO |
-| 20 | ~~Analytics dashboard (retention, churn, LTV)~~ | ✅ CFO |
+| 11 | Tournament entry fee commission (5–10%) | CFO |
+| 12 | Handicap calculation from round scores | CMO |
+| 13 | Web push notifications | CMO |
+| 14 | PWA with home screen install | CTO |
+| 15 | Seasonal pricing ($29.99 for 6 months) | CFO |
+| 16 | B2B pilot: sell to 2–3 golf clubs | CFO |
 
 ---
 
-## CFO — Open Items
+## CFO — Status
 
-### No Analytics or Revenue Visibility
-There is **no analytics, no cohort tracking, no revenue reporting**. Before spending another dollar on features, instrument:
-- Trial-to-paid conversion rate
-- Monthly churn by plan
-- CAC by acquisition channel
-- ARPU and LTV by cohort
-- Average time to first paid action
+### ✅ Launch Trial Period (through May 31, 2026)
+All users receive full access at no charge through May 31. Stripe subscription infrastructure is ready to activate. Membership page clearly communicates the June 1 billing start date with a green "Free access through May 31" banner.
 
-Without these, every product decision is a guess.
+### 🔶 Subscription Billing — Ready, Not Yet Active
+- Stripe Checkout Session (subscription mode) — implemented ✅
+- Webhook handlers for all lifecycle events — implemented ✅
+- Live keys not yet in Secrets Manager — needed before June 1 ⬜
+- Full dunning sequence (day 3, day 7 follow-ups) — not yet implemented ⬜
+- Renewal reminder email (7 days before expiry) — not yet implemented ⬜
 
-### 🔶 Subscription Billing — Partially Complete
-The webhook infrastructure is in place but the checkout flow still has gaps:
-- Full dunning sequence not implemented — only the initial payment-failed email is sent; no follow-up at day 3 or day 7 before downgrade
-- Renewal reminder email (7 days before expiry) not implemented
-- Checkout creates a `PaymentIntent`, not a `Subscription` object — the webhook infrastructure is in place but `invoice.paid` events won't fire until checkout switches to Stripe Checkout in subscription mode
-
-### Revenue is One-Dimensional
-All additional revenue levers remain on the roadmap:
+### Revenue Levers
 
 | Lever | Status |
 |---|---|
-| Tournament entry fee commission (5–10%) | ⬜ Open |
+| Monthly/Annual subscriptions | 🔶 Infrastructure ready; billing paused until June 1 |
+| Tournament entry fee commission | ⬜ Open |
 | GolfNow referral/affiliate | ⬜ Blocked (integration still mocked) |
 | Premium tier | ⬜ Open |
-| Course partnerships | ⬜ Open |
 | B2B white-label | ⬜ Open |
 
-### Pricing Alternatives Not Evaluated
+### Pricing Alternatives Not Yet Evaluated
 - **Seasonal plan**: $29.99 for 6 months (April–September)
 - **Per-event pricing**: $4.99 to unlock for a single round
 - **Family/group plan**: one subscription, up to 4 golfers
 
 ---
 
-## COO — Open Items
+## COO — Status
 
 ### ⬜ BLOCKER: GolfNow Integration is Mocked
-The tee time booking feature is not real. `GolfNowClient` returns hardcoded data. GolfSync cannot be marketed as a tee-time booking platform until this is resolved.
+Tee-time data is still from `GolfNowClientMock`. Exit interstitial and non-affiliation disclaimer are now in place (legal exposure addressed), but the core booking feature is not real.
 
-**Decision needed:** (a) negotiate GolfNow API partnership, (b) pivot to Supreme Golf or TeeOff, or (c) reposition as a "round management" platform and remove the tee-time booking promise.
+**Decision needed:** (a) negotiate GolfNow/Supreme Golf/TeeOff API partnership, (b) pivot to "round management" platform and remove tee-time promise.
 
-### 🔶 Tournament Database Has No National Pipeline
-Live discovery via Google CSE supplements the 12 seeded east-coast tournaments, but there is no pipeline for structured national data. Options:
-- License from USGA, PGA, Golf Genius
-- Crowdsource via user-submitted tournament board (existing report workflow)
-- State golf association partnerships
+### ✅ Legal & Compliance (2026-04-09)
+- Terms of Service page (`/terms`) — 13 sections, non-endorsement clause for third parties
+- Privacy & Cookie Policy page (`/privacy`) — GDPR rights, cookie table, opt-out instructions
+- Cookie consent banner — `localStorage` key, essential-only cookies stated, links to Privacy page
+- Email marketing opt-out — toggle on `/account`; PATCH `/api/users/me/email-preferences`; drip guard; CAN-SPAM footer on all marketing emails
+- GolfNow exit interstitial — modal with explicit non-affiliation statement before navigation
+- Global footer with legal links on every page
 
-### ✅ AI Conversation Memory — Redis-backed
-`RedisChatMemoryStore` stores conversation history in ElastiCache with 24h TTL. Graceful fallback to in-process memory when `AI_REDIS_ENABLED=false` (local dev). Set `cfg.redisEnabled=true` in CDK to provision the ElastiCache cluster.
+### ✅ GDPR Self-Deletion
+DELETE `/api/users/me` cancels Stripe subscription, cascade-deletes all user data, clears auth cookie. `/account` page requires typed confirmation.
+
+### 🔶 Tournament Database — No National Pipeline
+Live discovery via Google CSE supplements east-coast seed data. No structured national pipeline. Tournament feature hidden pending this gap.
 
 ### 🔶 Observability Gaps
-CloudWatch structured logging and error alarms are in place, but still missing:
-- Business metrics (signups/day, trial → paid conversions, round creation rate)
+CloudWatch structured logging and error alarms in place. Still missing:
+- Business metrics dashboard (signups/day, trial → paid conversion, round creation rate)
 - RDS Performance Insights
 - Distributed tracing / correlation IDs
 - Route53 health checks and synthetic monitoring
 
-### ✅ Rate Limiting — Complete
-Auth (10/min/IP), AI chat (5/min/user), user search (30/min/IP), tee-time search (10/min/IP). Separate sliding-window buckets per endpoint. Dev overrides via `RATE_LIMIT_*` env vars.
-
-### ⬜ GDPR / Data Rights Gap
-No user self-deletion API. Admin hard-delete exists but users cannot delete their own accounts. Legal requirement in the EU; trust signal in the US.
-
-### ⬜ Session Architecture Will Break Under Load
-AI conversation state is in-process memory. No caching on tournament or user data. Add Redis before any marketing campaigns that drive traffic spikes.
-
-### ⬜ Missing Operational Runbook Pieces
-- Canary deployment strategy (ECS blue/green or weighted routing)
+### ⬜ Operational Runbook Gaps
+- Canary deployment strategy (ECS blue/green)
 - Database backup restore test
 - Incident response playbook
-- On-call rotation (SNS alarm goes to one email address)
-- Database connection pool monitoring
+- On-call rotation beyond a single SNS email
 
 ---
 
-## CMO — Open Items
+## CMO — Status
 
-### 🔶 Activation Funnel Has Gaps
+### 🔶 Activation Funnel
 
 | Stage | Current State |
 |---|---|
 | **Awareness** | ⬜ No marketing infrastructure |
-| **Activation** | 🔶 Full trial access, but no onboarding flow |
-| **Retention** | 🔶 Availability polls help; no push notifications |
-| **Referral** | ⬜ No shareable round links |
+| **Activation** | 🔶 Full trial access from day one; no guided onboarding flow |
+| **Retention** | 🔶 Availability polls, drip emails, leaderboard active |
+| **Referral** | 🔶 Built but hidden — "Coming this Summer" |
 
-Most valuable next investment: **3-step onboarding flow** (find home course → invite a friend → create first round).
+**Highest-priority next investment:** 3-step onboarding flow (find home course → invite a friend → create first round).
 
-### ⬜ No Viral / "Aha" Moment
-The friend score feed is live but internal — not shareable externally. Candidates for a shareable moment:
-- Shareable round scorecard (PNG export for Instagram/X)
-- Friend leaderboard (where do you rank this season?)
-- Public round lobby (matchmaking for open rounds)
+### 🔶 Referral Program — Hidden
+Referral codes, invite links, credit logic, and dashboard widget are all built and tested. Hidden behind "Coming this Summer" teaser on the landing page pending full launch readiness. Restore by uncommenting the dashboard widget and adding `/referral` to the landing page CTA.
 
-### ⬜ National Tournament Coverage
-Discovery works for east-coast tournaments via Google CSE but has no structured pipeline for national coverage.
+### 🔶 Tournament Discovery — Hidden
+Feature is built; displayed as a "Coming this Summer" card on the landing page. Blocked by national data pipeline gap. Restore when data coverage is sufficient.
 
-### ⬜ Social Proof, Positioning, Referral
-No public profiles, no leaderboards, no shareable links, no referral program.
+### ⬜ Viral / "Aha" Moment
+Shareable scorecard (PNG for Instagram/X) is the highest-potential viral feature. Friend leaderboard is live but internal.
+
+### ✅ Social Loop Complete
+- Friend network, round invites, group messaging, availability polls all live
+- Friend leaderboard by rounds played
+- Trial drip sequence (day 0, 3, 7, 21, 27)
+- Shareable round invite links for non-members
 
 ---
 
-## CTO — Open Items
+## CTO — Status
 
 ### ⬜ No CI/CD Pipeline
-Deployments are still manual `cdk deploy` commands. Every release requires developer intervention.
+Deployments are still manual `cdk deploy` + `docker compose build`. Every release requires developer intervention.
 
-### ⬜ Redis for AI State + Caching
-AI conversation memory is in-process. No shared cache across ECS tasks. Required before scaling to multiple tasks or running any marketing campaigns.
+### ✅ Security & Auth
+- JWT in httpOnly cookie (XSS hardened)
+- CORS PATCH method added (was causing 403 on round edits)
+- Rate limiting: auth (10/min/IP), AI (5/min/user), search (30/min/IP), tee-times (10/min/IP)
+- IDOR on change-password fixed; email removed from user search responses
+
+### ✅ Test Coverage (as of 2026-04-09)
+- ≥80% unit test coverage maintained (JaCoCo enforced)
+- All controller, service, and API-layer changes have corresponding unit tests
+- Cypress E2E covers: auth, rounds, dashboard, account (including email opt-out toggle), referral widget hidden state
+
+### ✅ Infrastructure Optimisations (savings vs. original)
+| Service | Before | After | Saving |
+|---|---|---|---|
+| Camunda ECS service | ~$70–105/mo | $0 (in-process) | ~$70–105/mo |
+| Dev Fargate → EC2 t3.small | ~$35/mo | ~$15/mo | ~$20/mo |
+| Dev NAT Gateway → VPC Endpoints | ~$30–35/mo | $0 | ~$30–35/mo |
+| CloudFront + S3 (prod static) | ~$20/mo | ~$3–5/mo | ~$15–17/mo |
+| **Total monthly saving** | | | **~$135–177/mo** |
 
 ### ⬜ Single-Region Deployment
 No multi-region or failover. An outage during peak booking hours (Friday morning) has no recovery path.
-
-### Current AWS Spend (Post-Optimisation)
-
-| Service | Dev | Prod | Notes |
-|---|---|---|---|
-| **ECS Fargate** (API) | $0 | ~$70–140 | Dev moved to EC2 t3.small |
-| **EC2 t3.small** (dev) | ~$15 | — | Replaces $35 Fargate |
-| **RDS MySQL** (db.t3.micro) | ~$15 | ~$30–60 | Unchanged |
-| **ALB** | ~$20 | ~$20 | Unchanged |
-| **NAT Gateway** | $0 | ~$35 | Dev removed via VPC endpoints; prod still has it |
-| **CloudFront + S3** | — | ~$3–5 | Replaces $20/mo Fargate static serving |
-| **Secrets Manager** | ~$5 | ~$5 | Unchanged |
-| **CloudWatch Logs** | ~$5 | ~$10 | Unchanged |
-| **ECR** | ~$1 | ~$1 | Unchanged |
-| **Total** | **~$60/mo** | **~$175–280/mo** | ~$90/mo saved dev; ~$40–60/mo saved prod |
 
 ---
 
 ## Completed Items
 
-### Priority Action Plan
 | # | Action | Completed |
 |---|---|---|
-| 1 | Stripe subscription webhooks | ✅ 2026-04-07 |
-| 4 | Move social features out from behind paywall | ✅ 2026-04-07 — replaced with 30-day free trial |
-| — | Conversion funnel — event instrumentation, 5-step drip sequence, in-app CTAs | ✅ 2026-04-07 |
-| — | Referral mechanism — unique codes, invite links, friend leaderboard, 30-day credit | ✅ 2026-04-07 |
-| — | Stripe Checkout Session (subscription mode) — hosted checkout for recurring billing | ✅ 2026-04-07 |
-| 11 | Rate limit AI chat (5/min/user), user search (30/min/IP), tee-time search (10/min/IP) | ✅ 2026-04-07 |
-| 9 | Redis-backed AI conversation memory — RedisChatMemoryStore + ElastiCache CDK; graceful in-memory fallback | ✅ 2026-04-07 |
-| 6 | Shareable round invite link — GET /api/invite/rounds/{id}/link; "Copy Invite Link" button on round detail page | ✅ 2026-04-07 |
-| 12 | GDPR self-deletion — DELETE /api/users/me cancels Stripe subscription, cascade-deletes all data, clears cookie; /account page with two-step confirmation | ✅ 2026-04-07 |
-| 20 | Analytics dashboard — AnalyticsService queries user_events + users; KPI cards, 5-step funnel, 30-day daily signups; Analytics tab on /admin | ✅ 2026-04-07 |
-
-### CFO
-- ✅ **Conversion funnel instrumentation** — `subscription_cancelled_monthly/annual` events fired on webhook; `countEventsByTypeInLastNDays` query; `AnalyticsDashboardResponse` extended with ARPU, LTV, monthly churn rate, churn by plan (30d), and new-paid-30d (for CAC); Revenue & Retention panel added to admin analytics tab. Trial-to-paid rate already existed as `conversionRate`.
-- ✅ **Free tier → 30-day trial** — Free tier eliminated. Full access from day one, no credit card required. Trial countdown on dashboard (amber ≤5 days, red on expiry). `TRIAL_EXPIRED` 403 redirects to `/membership`.
-- ✅ **Subscription webhooks** — `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`. HMAC signature verification. All five handlers idempotent. Payment-failed and cancellation emails sent.
-
-### COO
-- ✅ **Subscription lifecycle automated** — Webhook handlers manage renewals, failures, upgrades, and cancellations without manual intervention.
-- ✅ **Security hardening** — JWT moved to httpOnly cookie; IDOR on change-password fixed; email removed from user search responses; AI agent email leak fixed; user search minimum 2-character validation.
-- ✅ **CloudWatch observability** — JSON structured logging, error alarm (5 ERRORs/5 min → SNS), log tail commands.
-- ✅ **Tournament discovery** — Live Google CSE with SGA site queries, city/state forwarding, 2-hour cache. Users can register for discovered tournaments via safe URL resolver.
-
-### CMO
-- ✅ **Registration friction removed** — Single-form registration, no plan selection, lands directly in product with full trial access.
-- ✅ **Referral program** — Unique 8-char code per user on dashboard. Referrer credited 30 days free when referral converts. Sign-ups / converted / credited stats shown.
-- ✅ **Round invite for non-members** — Booker invites by email; secure link lands on `/invite/[token]` showing round details + register CTA.
-- ✅ **Friend leaderboard** — `/leaderboard` ranks friends by rounds played this season; rank shown on page and linked from dashboard.
-- ✅ **Trial drip sequence** — Day 0 welcome, day 3 friend nudge, day 7 round nudge, day 21 trial ending, day 27 personalized last-chance email.
-- ✅ **Group coordination** — Availability Polls (booker proposes date/time options, friends vote I'm In / Can't Make It). Dashboard widget shows active polls with "Vote needed" badge.
-- ✅ **Booker tooling** — Add players post-creation, nudge pending invitees, per-player dues and payment settlement (PAID/WAIVED).
-- ✅ **Tournament discovery UX** — Admin-featured tournaments at top of dashboard, interest preferences (Scramble, Amateur, Charity, etc.) with localStorage persistence and preferred-first sorting.
-
-### CTO
-- ✅ **Camunda in-process** — Removed second ECS service (~$70–105/month saved).
-- ✅ **EC2 t3.small for dev** — Replaced dev Fargate (~$50/month saved).
-- ✅ **VPC Endpoints (dev)** — ECR API/DKR, Secrets Manager, CloudWatch Logs, S3 Gateway replace NAT Gateway for dev (~$30–35/month saved).
-- ✅ **CloudFront + S3 (prod)** — `/_next/static/*` served from CDN; `assetPrefix` controlled via `NEXT_PUBLIC_CDN_URL` (~$20/month saved, lower latency).
-- ✅ **Liquibase pre-deploy task** — Migrations run as isolated ECS task before API starts; race condition on multi-task deployments eliminated.
-- ✅ **Liquibase migrations 021–022** — `trial_expires_at`, `stripe_customer_id`, `stripe_subscription_id` columns with indexes; backfill for pre-migration users.
+| — | GolfNow exit interstitial + non-affiliation disclaimers | ✅ 2026-04-09 |
+| — | Legal compliance — Terms, Privacy, Cookie consent, CAN-SPAM email opt-out | ✅ 2026-04-09 |
+| — | Launch trial period decision — free through 5/31, membership required from June 1 | ✅ 2026-04-09 |
+| — | CDK renamed ParParty → GolfSync (all env vars, file names, stack names) | ✅ 2026-04-09 |
+| — | CORS PATCH fix — round edit 403 resolved | ✅ 2026-04-09 |
+| — | Round detail — inline edit, friends autocomplete, dues in dollars | ✅ 2026-04-09 |
+| — | Dashboard AI navigation assistant | ✅ 2026-04-09 |
+| — | Conversion funnel instrumentation + drip sequence | ✅ 2026-04-07 |
+| — | Referral mechanism — codes, invite links, leaderboard, 30-day credit | ✅ 2026-04-07 |
+| — | Stripe Checkout Session (subscription mode) | ✅ 2026-04-07 |
+| — | Rate limiting — AI, search, tee-times | ✅ 2026-04-07 |
+| — | Redis-backed AI conversation memory + ElastiCache CDK | ✅ 2026-04-07 |
+| — | Shareable round invite links | ✅ 2026-04-07 |
+| — | GDPR self-deletion | ✅ 2026-04-07 |
+| — | Analytics dashboard (retention, churn, LTV) | ✅ 2026-04-07 |
+| — | Free tier → 30-day free trial; full access from signup | ✅ 2026-04-07 |
+| — | Security hardening — JWT httpOnly, IDOR fix, PublicUserResponse | ✅ 2026-04-06 |
+| — | CDK dev/prod split (Gmail SMTP dev, SES prod, Route53 prod-only) | ✅ 2026-04-06 |

@@ -12,13 +12,31 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 - [ ] **GolfNow cancellation handling** — Implement round cancellation according to GolfNow API requirements. Research GolfNow's cancellation policies (window, fees, confirmation flow) and mirror that logic in the `cancelRound` flow. Update the BPMN process and UI accordingly so users understand what happens when a booked tee time is cancelled.
 
+- [ ] **3-step onboarding flow** — After registration, guide new users through: (1) find/set home course, (2) invite a friend, (3) create first round. Currently users land on the dashboard with no guidance. This is the highest-leverage activation improvement available.
+
+- [ ] **Tournament Discovery — live feature** — Tournament Discovery is currently hidden ("Coming this Summer" teaser on landing page). When ready to launch: set `TOURNAMENTS_ENABLED=true`, restore the feature card on the landing page, and ensure the tournament database has national coverage beyond the current east-coast seed data.
+
+- [ ] **Refer a Friend — live feature** — Referral program is currently hidden ("Coming this Summer" teaser on landing page). The backend (referral codes, credit logic) is implemented. When ready: restore the dashboard widget, add referral code to account settings, and wire the landing page CTA.
+
+- [ ] **Membership billing activation** — Stripe is integrated but billing does not begin until June 1, 2026. Before that date: confirm Stripe live keys are populated in Secrets Manager, switch `STRIPE_ENABLED=true` in prod, verify webhook endpoint is registered in the Stripe dashboard, and send a pre-billing heads-up email to all users. Full dunning sequence (day 3 and day 7 follow-up after failed payment) is not yet implemented.
+
 ---
 
 ## Improvements
 
 <!-- Enhancements to existing features, UX polish, performance -->
 
-- [ ] 
+- [ ] **Shareable scorecard** — PNG export of a round scorecard for sharing on Instagram/X. Highest-impact viral moment candidates.
+
+- [ ] **Course leaderboard** — Top scores per course (complements the existing friend leaderboard by rounds played).
+
+- [ ] **Web push notifications** — Alert players to round invites, poll votes, and message activity without requiring them to open the app.
+
+- [ ] **PWA / home screen install** — `manifest.json` + service worker so users can install GolfSync on their phone home screen.
+
+- [ ] **Full dunning email sequence** — Currently only the initial payment-failed email is sent. Add day-3 and day-7 follow-up emails before membership is downgraded. Also add a renewal reminder email 7 days before subscription expiry.
+
+- [ ] **How-to guide and FAQ updates for legal/compliance pages** — Update `app/how-to/account/page.tsx` and the FAQ in `app/support/page.tsx` to reflect: (a) the 5/31 launch trial period, (b) the email opt-out toggle in account settings, (c) the Terms / Privacy / Cookie pages.
 
 ---
 
@@ -26,13 +44,15 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 <!-- Auth, secrets, AWS, hardening, compliance -->
 
-- [ ] **MFA for sensitive operations** — Add multi-factor authentication challenges before high-risk actions: Stripe billing management (plan changes, payment method updates, subscription cancellation), account deletion, and admin-panel access. Evaluate TOTP (Google Authenticator / Authy via a library such as FINOS `legend-engine` auth patterns or a standard TOTP library) vs. email OTP as the second factor. Backend needs an `mfa_secret` column, a verify-code endpoint, and a step-up token pattern so the MFA check doesn't break the existing session flow. Frontend needs a modal challenge that fires before the sensitive action proceeds.
+- [ ] **MFA for sensitive operations** — Add multi-factor authentication challenges before high-risk actions: Stripe billing management, account deletion, and admin-panel access. Evaluate TOTP (Google Authenticator / Authy) vs. email OTP. Backend needs an `mfa_secret` column, a verify-code endpoint, and a step-up token pattern. Frontend needs a modal challenge before the sensitive action proceeds.
 
-- [ ] **CDK contact/support information audit** — Review all hard-coded support and contact addresses across the CDK stack and application. Currently `supportEmail: 'support@golfsync.com'` is set in `golfsync-cdk/bin/parparty-cdk.ts` for both dev and prod; the account page references `support@golfsync.io` (different domain). Decide on the canonical support address and make it consistent across CDK config, `application.properties` (`golfsync.mail.support`), all email templates, and the `/account` page. Consider driving it from a Secrets Manager value rather than hard-coding.
+- [ ] **Support email — permanent address** — `ryanrpick@gmail.com` is set as the support address temporarily across `application.properties`, all email templates, and all web pages (terms, privacy, account, support). Replace with a permanent `support@golfsync.com` or similar before public launch and update `SUPPORT_EMAIL` in Secrets Manager / `.env.prod`.
 
-- [ ] **CDK TODOs — Route53 hosted zone and ACM certificate** — `parparty-cdk.ts` has two outstanding `// TODO` comments in the prod stack: (1) `hostedZoneId` must be set (find via `aws route53 list-hosted-zones`) and (2) `certificateArn` must be provided (request via ACM in us-east-1). Both are required before the prod ALB HTTPS listener will work. Document the values in `AWS_DeploymentGuide.md` once confirmed.
+- [ ] **CDK TODOs — Route53 hosted zone and ACM certificate** — `golfsync-cdk.ts` has two outstanding values in the prod stack that must be populated before prod HTTPS works: (1) `GOLFSYNC_HOSTED_ZONE_ID` — find via `aws route53 list-hosted-zones`; (2) `GOLFSYNC_CERT_ARN` — request via ACM in us-east-1. Document the values in `AWS_DeploymentGuide.md` once confirmed.
 
-- [ ] **CDK alarm email environment variables** — `PARPARTY_DEV_ALARM_EMAIL` and `PARPARTY_PROD_ALARM_EMAIL` are referenced in `parparty-cdk.ts` but not listed in `.env.dev` or `.env.prod.example`. Add them with instructions so operators know to set them before deploying.
+- [ ] **CDK alarm email env vars** — `GOLFSYNC_DEV_ALARM_EMAIL` and `GOLFSYNC_PROD_ALARM_EMAIL` must be set before deploying either stack. Add to `.env.prod.example` with instructions.
+
+- [ ] **GolfNow API partnership or pivot** — GolfNow integration is currently mocked (`GolfNowClientMock`). Exit interstitial and non-affiliation disclaimers are in place. Decision needed: (a) negotiate GolfNow/Supreme Golf/TeeOff API partnership, or (b) reposition as "round management" platform and remove tee-time booking. Blocking real marketing.
 
 ---
 
@@ -40,7 +60,7 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 <!-- Known defects to fix -->
 
-- [ ] 
+- [ ]
 
 ---
 
@@ -48,7 +68,7 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 <!-- Refactors, test gaps, dependency updates, cleanup -->
 
-- [ ] **Migrate from Camunda 7 to FluxNova** — Camunda 7 reaches end of life; FluxNova (`org.finos.fluxnova.bpm.springboot`) is the target BPM runtime for long-term support. Replace the `org.camunda.bpm.springboot` starters, update BPMN process definitions as needed, and verify the `golf-round-booking-process` and `tournament-report-process` workflows behave identically. Note: FluxNova starters are not on Maven Central — confirm artifact repository before starting.
+- [ ] **Migrate from Camunda 7 to FluxNova** — Camunda 7 reaches end of life; FluxNova (`org.finos.fluxnova.bpm.springboot`) is the target BPM runtime. Replace starters, update BPMN definitions, verify `golf-round-booking-process` and `tournament-report-process` workflows behave identically. Note: FluxNova starters are not on Maven Central — confirm artifact repository before starting.
 
 ---
 
@@ -56,7 +76,11 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 <!-- Pricing, partnerships, analytics, marketing, legal -->
 
-- [ ] 
+- [ ] **Seasonal pricing evaluation** — Evaluate $29.99 for 6 months (April–September), per-event pricing ($4.99 for one round), and family/group plan (one subscription, up to 4 golfers) before June 1 billing launch.
+
+- [ ] **B2B pilot** — Approach 2–3 local golf clubs about a white-label or club-management pilot. Existing admin panel and round management tooling provides a foundation.
+
+- [ ] **Tournament entry fee commission** — 5–10% commission on tournament registrations processed through the platform. Requires real tournament registration API integration.
 
 ---
 
@@ -66,47 +90,47 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 | Date | Item |
 |------|------|
-| 2026-04-08 | Landing page redesign — full feature showcase (6 feature cards), pricing section with Free Trial and Member plans visible on load, Member card routes to `/register?plan=member` which pre-selects membership flow on registration |
-| 2026-04-08 | CuratedTournamentRefreshService unit test coverage — 58 tests covering all public/private methods via reflection; 95.2% instruction, 84.2% branch, 96.1% line, 100% method coverage |
-| 2026-04-08 | Availability poll sharing — all accepted friends pre-selected by default when creating a poll; Select All / Deselect All toggle added; fixed friend username resolution bug |
-| 2026-04-08 | Nullable entry fee and format "Unavailable" sentinel — entry_fee column nullable (migration 033); TournamentResponse.entryFee boxed Double; refresh() sets null fee and "Unavailable" format when neither page scrape nor Serper yields a realistic value |
-| 2026-04-08 | Tournament location radius filter — removed Serper-discovered results (had hardcoded 0.0 mi distance) from listing endpoint; only curated tournaments with real coordinates returned |
-| 2026-04-08 | Tournament date corrections — Red Shoe/RMHC corrected to 2026-10-19 (scraped from registration page); Dominion Energy corrected to 2026-10-05; date column made nullable (migration 032); "Unavailable" sentinel when date cannot be confirmed |
-| 2026-04-08 | Tournament page scraping — scrapePage() fetches tournament's own registration URL to extract date, format, and entry fee before falling back to Serper snippets |
-| 2026-04-08 | Tournament refresh 75-mile default radius — frontend defaults to 75 miles; curated tournament seed data city/state values restored |
-| 2026-04-08 | Signup → paid conversion funnel (CFO item #5) — subscription_cancelled events fired on webhook; ARPU, LTV, churn rate, Revenue & Retention panel on admin analytics |
-| 2026-04-07 | Analytics dashboard — AnalyticsService aggregates funnel counts; GET /api/admin/analytics; Analytics tab on /admin with KPI cards, funnel table, 30-day daily signups |
-| 2026-04-07 | GDPR self-deletion — DELETE /api/users/me cancels Stripe subscription then cascade-deletes; sendAccountDeletionConfirmation email; /account page with typed confirmation guard |
-| 2026-04-07 | Shareable round invite links — migration 029 makes invitee_email nullable; generic 7-day token; GET /api/invite/rounds/{id}/link (booker-only); "Copy Invite Link" button |
-| 2026-04-07 | AI chat error handling — AiController catches exceptions and returns 503 with user-friendly message; conversationId in all responses |
-| 2026-04-07 | Redis-backed AI conversation memory — RedisChatMemoryStore with 24h TTL; fallback to InMemoryChatMemoryStore when AI_REDIS_ENABLED=false; ElastiCache added to CDK |
-| 2026-04-07 | Extended rate limiting — AI chat (5/min per user), user search (30/min per IP), tee-time search (10/min per IP) |
-| 2026-04-07 | Stripe Checkout Session (subscription mode) — hosted Stripe Checkout with recurring Price IDs; POST /api/payments/membership/create-checkout-session |
-| 2026-04-07 | Friend leaderboard — GET /api/rounds/leaderboard ranked by rounds played this calendar year; /leaderboard page with rank medals |
-| 2026-04-07 | Round invite for non-members — invite by email from round detail; UUID token (migration 027, 7-day expiry); /invite/[token] landing page |
-| 2026-04-07 | Referral program — unique 8-char code (migration 026); 30-day membership credit on conversion; referral widget on dashboard |
-| 2026-04-07 | Trial drip email sequence — 5-step sequence (day 0, 3, 7, 21, 27); bitmask per user (migration 028); @Scheduled daily at 9 AM |
-| 2026-04-07 | Conversion funnel instrumentation — user_events table (migration 025); UserEventService with idempotent first-occurrence semantics |
-| 2026-04-07 | CTO infrastructure changes — Camunda embedded in-process; EC2 t3.small for dev ECS; VPC endpoints replacing NAT Gateway; CloudFront for static assets; Liquibase as pre-deploy ECS task |
-| 2026-04-07 | Free tier replaced with 30-day free trial — all features unlocked on signup; trial countdown on dashboard; Stripe subscription webhooks with HMAC verification |
-| 2026-04-07 | CTO AWS assessment added to executive-mvp-review.md |
-| 2026-04-07 | How To Guide restructured into role-based hub with sub-pages: Booker, Participant, Tournaments, Account |
-| 2026-04-07 | Safe tournament registration URL resolver — GET /api/tournaments/register-url with adult-content safety filter |
-| 2026-04-07 | Add player post-creation — booker can invite additional players to an existing round |
-| 2026-04-07 | Nudge pending invitees — booker sends in-app reminder to unresponded players |
-| 2026-04-07 | Availability Polls — date/time option polls; friends vote I'm In/Can't Make It; dashboard widget; migration 020 |
-| 2026-04-07 | Booker/Payment settlement — per-player dues and PAID/WAIVED status for rounds and tournament registrations |
-| 2026-04-07 | Round scores — players post gross stroke scores; friend score feed on dashboard (paid) |
-| 2026-04-07 | Free tier by default — friends/messaging/rounds gated behind paid membership; upgrade banner |
-| 2026-04-07 | Tournament self-registration — users mark themselves registered and add friends |
-| 2026-04-07 | Live tournament discovery via Google Custom Search API with 2-hour cache |
-| 2026-04-07 | Tournament type interest preferences with localStorage persistence and preferred-first sorting |
-| 2026-04-06 | Admin-promoted courses and tournaments with haversine location filtering |
-| 2026-04-06 | User search minimum 2-character validation |
-| 2026-04-06 | Rate limiting on auth endpoints (10 req/min per IP, sliding window) |
-| 2026-04-06 | AI booking agent no longer leaks user emails in friend search results |
-| 2026-04-06 | Change-password IDOR fix |
-| 2026-04-06 | PublicUserResponse DTO — email no longer exposed in user search results |
-| 2026-04-06 | CDK dev/prod environment split (Gmail SMTP dev, SES prod, Route53 prod-only) |
-| 2026-04-06 | ALB HTTPS via ACM — CDK conditional TLS listener on 443 |
-| 2026-04-06 | JWT moved from localStorage to httpOnly cookie (XSS fix) |
+| 2026-04-09 | GolfNow exit interstitial + non-affiliation disclaimers — `ExternalLinkModal` shown before opening GolfNow; inline disclaimer on booking page; Terms of Service non-endorsement clause strengthened |
+| 2026-04-09 | "Coming this Summer" teaser on landing page — Tournament Discovery and Refer a Friend shown as dashed-border coming-soon cards in the features section |
+| 2026-04-09 | Membership page messaging updated — green launch-period banner; both plans show identical feature lists; no fake plan differentiation; "no charge until June 1, 2026" messaging throughout |
+| 2026-04-09 | Landing page pricing section rewritten — removed fake Member-only features (Priority AI, Advanced management); Monthly and Annual cards with accurate, identical feature lists |
+| 2026-04-09 | Contact Us → support form — Footer "Contact Us" now links to `/support#contact`; `id="contact"` anchor added to support page form |
+| 2026-04-09 | Support email updated to ryanrpick@gmail.com — across application.properties, EmailService, all web pages (support, account, terms, privacy) |
+| 2026-04-09 | Email marketing opt-out — `email_marketing_opt_out` column (migration 035); PATCH `/api/users/me/email-preferences`; toggle on account settings page; drip email guard; CAN-SPAM unsubscribe footer on all marketing emails |
+| 2026-04-09 | Legal compliance pages — Terms of Service (`/terms`), Privacy & Cookie Policy (`/privacy`), global Footer with legal links, cookie consent banner (localStorage, essential cookies only) |
+| 2026-04-09 | Dashboard: referral widget hidden (Coming this Summer); AI navigation assistant deployed |
+| 2026-04-09 | Round detail page — inline edit form (max players, date, time, course, notes); friends autocomplete dropdown on invite input; dues input in dollars; "Completed Booking" status label |
+| 2026-04-09 | CORS PATCH fix — added `PATCH` to `WebConfig.java` allowed methods; was causing 403 on round edits |
+| 2026-04-09 | CDK renamed from ParParty → GolfSync — env vars, file names, stack class names updated throughout `golfsync-cdk/` |
+| 2026-04-09 | Test coverage — TrialDripServiceTest (opt-out guard), UserControllerTest (PATCH email-preferences), UserServiceTest (setEmailMarketingOptOut), api.test.ts (updateEmailPreferences, deleteMyAccount), account.cy.ts (email toggle E2E), dashboard.cy.ts (referral widget hidden) |
+| 2026-04-08 | Landing page redesign — full feature showcase, pricing section, Member card |
+| 2026-04-08 | CuratedTournamentRefreshService unit test coverage — 95.2% instruction coverage |
+| 2026-04-08 | Availability poll sharing — all accepted friends pre-selected; Select All / Deselect All |
+| 2026-04-08 | Nullable entry fee and format "Unavailable" sentinel (migration 033) |
+| 2026-04-08 | Tournament location radius filter — only curated tournaments with real coordinates |
+| 2026-04-08 | Tournament date corrections and page scraping |
+| 2026-04-08 | Signup → paid conversion funnel (CFO item #5) |
+| 2026-04-07 | Analytics dashboard — AnalyticsService; GET /api/admin/analytics |
+| 2026-04-07 | GDPR self-deletion — DELETE /api/users/me; /account page |
+| 2026-04-07 | Shareable round invite links (migration 029) |
+| 2026-04-07 | AI chat error handling + conversationId |
+| 2026-04-07 | Redis-backed AI conversation memory + ElastiCache CDK |
+| 2026-04-07 | Extended rate limiting — AI (5/min/user), search (30/min/IP), tee-times (10/min/IP) |
+| 2026-04-07 | Stripe Checkout Session subscription mode |
+| 2026-04-07 | Friend leaderboard — /leaderboard |
+| 2026-04-07 | Round invite for non-members — UUID token; /invite/[token] |
+| 2026-04-07 | Referral program — unique 8-char code; 30-day credit on conversion |
+| 2026-04-07 | Trial drip email sequence — 5-step, bitmask per user |
+| 2026-04-07 | Conversion funnel instrumentation — user_events table |
+| 2026-04-07 | CTO infrastructure — Camunda in-process; EC2 t3.small dev; VPC endpoints; CloudFront; Liquibase pre-deploy |
+| 2026-04-07 | Free tier → 30-day free trial |
+| 2026-04-07 | How To Guide restructured (Booker, Participant, Tournaments, Account) |
+| 2026-04-07 | Availability Polls (migration 020) |
+| 2026-04-07 | Booker/Payment settlement — per-player dues, PAID/WAIVED |
+| 2026-04-07 | Round scores — post gross scores; friend score feed |
+| 2026-04-07 | Tournament self-registration |
+| 2026-04-07 | Live tournament discovery via Google CSE |
+| 2026-04-06 | Admin-promoted courses and tournaments |
+| 2026-04-06 | Rate limiting on auth endpoints |
+| 2026-04-06 | Security fixes — JWT httpOnly cookie, IDOR, PublicUserResponse, email leak |
+| 2026-04-06 | CDK dev/prod split (Gmail SMTP dev, SES prod, Route53 prod-only) |
