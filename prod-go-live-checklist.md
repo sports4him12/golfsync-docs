@@ -250,6 +250,7 @@ All of these are created by CDK with placeholder values. Replace them before tra
 - [ ] Auth cookie is `HttpOnly; Secure; SameSite=Strict` (check browser DevTools → Application → Cookies)
 - [ ] `COOKIE_SECURE=true` confirmed (CDK sets this automatically for prod)
 - [ ] Admin password is not `GolfSync1!` (dev seed password — never reaches prod, but verify)
+- [ ] Dev stack ALB locked down or destroyed — restrict `GolfSyncDevStack` ALB to your IP (`GOLFSYNC_DEV_ALLOWED_CIDR=<your-ip>/32` in `~/.zshrc` + redeploy), or run `npx cdk destroy GolfSyncDevStack --profile golfsync-dev` if dev is no longer needed
 
 ---
 
