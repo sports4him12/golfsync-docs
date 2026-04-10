@@ -8,21 +8,62 @@ Step-by-step checklist for deploying the Dev and Prod stacks using AWS CDK.
 
 ## Prerequisites
 
-### 1. AWS CLI configured
-```bash
-aws configure
-# Enter: Access Key ID, Secret Access Key, default region (us-east-1), output format (json)
+### 1. AWS CLI configured — IAM Identity Center (SSO)
 
-# Verify it's working
-aws sts get-caller-identity
+GolfSync uses IAM Identity Center with separate workload accounts for Dev and Prod.
+The management (root) account hosts IAM Identity Center only — no workload resources are deployed there.
+
+**One-time SSO profile setup:**
+```bash
+# Dev workload account profile
+aws configure sso --profile golfsync-dev
+# SSO session name:  golfsync
+# SSO start URL:     https://<your-org>.awsapps.com/start
+# SSO region:        us-east-1
+# Account:           <dev-account-id>      ← select from the list
+# Permission set:    AdministratorAccess   ← or your scoped CDK role
+# CLI default region: us-east-1
+# CLI output format:  json
+
+# Prod workload account profile
+aws configure sso --profile golfsync-prod
+# (same SSO session name/start URL — select the prod account this time)
 ```
 
-### 2. Bootstrap CDK (one-time per account/region)
+**Daily workflow — log in before any CDK or AWS CLI command:**
+```bash
+aws sso login --profile golfsync-dev   # opens browser, grants 8-hour credentials
+aws sso login --profile golfsync-prod  # separate session for prod
+```
+
+**Verify you're in the right account:**
+```bash
+aws sts get-caller-identity --profile golfsync-dev
+aws sts get-caller-identity --profile golfsync-prod
+```
+
+**Set account IDs so CDK pins each stack to the correct account:**
+```bash
+# Add to ~/.zshrc or ~/.zprofile — get account IDs from the command above
+export GOLFSYNC_DEV_ACCOUNT_ID=111111111111
+export GOLFSYNC_PROD_ACCOUNT_ID=222222222222
+```
+
+> **Why this matters:** With `GOLFSYNC_DEV_ACCOUNT_ID` set, running `cdk deploy GolfSyncDevStack --profile golfsync-prod` will fail — CDK detects the account mismatch before touching anything. Without it, a wrong `--profile` flag silently deploys to the wrong account.
+
+### 2. Bootstrap CDK (one-time per workload account)
+
+Each workload account needs CDK bootstrapped once. Do **not** bootstrap the management account.
+
 ```bash
 cd golfsync-cdk
-npx cdk bootstrap aws://YOUR_ACCOUNT_ID/us-east-1
+
+# Dev account
+npx cdk bootstrap aws://$GOLFSYNC_DEV_ACCOUNT_ID/us-east-1 --profile golfsync-dev
+
+# Prod account
+npx cdk bootstrap aws://$GOLFSYNC_PROD_ACCOUNT_ID/us-east-1 --profile golfsync-prod
 ```
-Find your account ID with: `aws sts get-caller-identity --query Account --output text`
 
 ### 3. Docker running
 CDK builds container images from source (`golfsync-api`, `golfsync-web`) and pushes them to ECR. Docker must be running on your machine at deploy time.
@@ -41,7 +82,7 @@ export GOLFSYNC_DEV_ALARM_EMAIL=support@golfsync.io
 ### Step 2 — Deploy
 ```bash
 cd golfsync-cdk
-npx cdk deploy GolfSyncDevStack
+npx cdk deploy GolfSyncDevStack --profile golfsync-dev
 ```
 Note the `AppUrl` output — this is the ALB DNS name (e.g. `http://GolfSync-Alb-xxxx.us-east-1.elb.amazonaws.com`).
 
@@ -57,13 +98,15 @@ The API container has Liquibase disabled (`SPRING_LIQUIBASE_ENABLED=false`) to p
 aws ec2 describe-subnets \
   --filters "Name=tag:aws-cdk:subnet-name,Values=public" \
             "Name=tag:aws-cdk:subnet-type,Values=Public" \
-  --query "Subnets[*].SubnetId" --output text
+  --query "Subnets[*].SubnetId" --output text \
+  --profile golfsync-dev
 
 # API security group ID
 aws ec2 describe-security-groups \
   --filters "Name=tag:aws:cloudformation:stack-name,Values=GolfSyncDevStack" \
             "Name=group-name,Values=*ApiSg*" \
-  --query "SecurityGroups[0].GroupId" --output text
+  --query "SecurityGroups[0].GroupId" --output text \
+  --profile golfsync-dev
 ```
 
 2. Copy the `LiquibaseMigrateCommand` from the CDK output, fill in the subnet and SG IDs, then run it:
@@ -188,7 +231,7 @@ export GOLFSYNC_CERT_ARN=arn:aws:acm:us-east-1:897253013130:certificate/a3fb0028
 export GOLFSYNC_PROD_ALARM_EMAIL=support@golfsync.io
 
 cd golfsync-cdk
-npx cdk deploy GolfSyncProdStack
+npx cdk deploy GolfSyncProdStack --profile golfsync-prod
 ```
 
 This creates:
@@ -314,11 +357,11 @@ By default, SES accounts are in sandbox mode and can only send to verified addre
 ```bash
 # Dev (safe to destroy — no deletion protection)
 cd golfsync-cdk
-npx cdk destroy GolfSyncDevStack
+npx cdk destroy GolfSyncDevStack --profile golfsync-dev
 
 # Prod (deletion protection is ON on RDS — must disable first)
 # AWS Console → RDS → Modify instance → uncheck deletion protection → apply immediately
-npx cdk destroy GolfSyncProdStack
+npx cdk destroy GolfSyncProdStack --profile golfsync-prod
 ```
 
 ---
@@ -330,11 +373,13 @@ The API container (which embeds Camunda in-process) can be accessed via ECS Exec
 ```bash
 # Dev
 aws ecs execute-command --cluster golfsync-dev \
-  --task <task-id> --interactive --command "/bin/sh"
+  --task <task-id> --interactive --command "/bin/sh" \
+  --profile golfsync-dev
 
 # Prod
 aws ecs execute-command --cluster golfsync-prod \
-  --task <task-id> --interactive --command "/bin/sh"
+  --task <task-id> --interactive --command "/bin/sh" \
+  --profile golfsync-prod
 ```
 
 Find the task ID: AWS Console → ECS → Clusters → `golfsync-dev` or `golfsync-prod` → Tasks
