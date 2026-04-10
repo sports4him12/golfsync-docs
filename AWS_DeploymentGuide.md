@@ -13,14 +13,14 @@ Step-by-step checklist for deploying the Dev and Prod stacks using AWS CDK.
 GolfSync uses IAM Identity Center with separate workload accounts for Dev and Prod.
 The management (root) account hosts IAM Identity Center only — no workload resources are deployed there.
 
-**One-time SSO profile setup:**
+**One-time SSO profile setup:** ✅ Done (`golfsync-dev` and `golfsync-prod` profiles configured)
 ```bash
 # Dev workload account profile
 aws configure sso --profile golfsync-dev
 # SSO session name:  golfsync
 # SSO start URL:     https://<your-org>.awsapps.com/start
 # SSO region:        us-east-1
-# Account:           <dev-account-id>      (select from the list)
+# Account:           161457898848  (dev)
 # Permission set:    AdministratorAccess
 # CLI default region: us-east-1
 # CLI output format:  json
@@ -28,6 +28,7 @@ aws configure sso --profile golfsync-dev
 # Prod workload account profile
 aws configure sso --profile golfsync-prod
 # (same SSO session name/start URL — select the prod account this time)
+# Account:           805865757850  (prod)
 ```
 
 **Daily workflow — log in before any CDK or AWS CLI command:**
@@ -42,11 +43,11 @@ aws sts get-caller-identity --profile golfsync-dev
 aws sts get-caller-identity --profile golfsync-prod
 ```
 
-**One-time: set account IDs and alarm email in `~/.zshrc`:**
+**One-time: set account IDs and alarm email in `~/.zshrc`:** ✅ Done
 ```bash
-# Paste this block, filling in your real account IDs
-export GOLFSYNC_DEV_ACCOUNT_ID=<dev-account-id>
-export GOLFSYNC_PROD_ACCOUNT_ID=<prod-account-id>
+# Already set in ~/.zshrc:
+export GOLFSYNC_DEV_ACCOUNT_ID=161457898848
+export GOLFSYNC_PROD_ACCOUNT_ID=805865757850
 export GOLFSYNC_DEV_ALARM_EMAIL=support@golfsync.io
 export GOLFSYNC_PROD_ALARM_EMAIL=support@golfsync.io
 ```
@@ -72,13 +73,15 @@ source ~/.zshrc
 
 Each workload account needs CDK bootstrapped once. Do **not** bootstrap the management account.
 
+✅ **Dev account bootstrapped** (`161457898848`)
+
 ```bash
 cd golfsync-cdk
 
-# Dev account
+# Dev account — already done
 npx cdk bootstrap aws://$GOLFSYNC_DEV_ACCOUNT_ID/us-east-1 --profile golfsync-dev
 
-# Prod account
+# Prod account — run before first prod deploy
 npx cdk bootstrap aws://$GOLFSYNC_PROD_ACCOUNT_ID/us-east-1 --profile golfsync-prod
 ```
 
@@ -129,8 +132,8 @@ aws ec2 describe-security-groups \
 aws ecs run-task \
   --cluster golfsync-dev \
   --task-definition <LiquibaseTaskDefArn> \
-  --launch-type EC2 \
-  --network-configuration 'awsvpcConfiguration={subnets=[<subnet-id>],securityGroups=[<sg-id>]}' \
+  --launch-type FARGATE \
+  --network-configuration 'awsvpcConfiguration={subnets=[<public-subnet-id>],securityGroups=[<sg-id>],assignPublicIp=ENABLED}' \
   --count 1 \
   --started-by pre-deploy-liquibase \
   --profile golfsync-dev
