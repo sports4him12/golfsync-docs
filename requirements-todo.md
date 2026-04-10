@@ -18,6 +18,8 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 - [ ] **Refer a Friend — live feature** — Referral program is currently hidden ("Coming this Summer" teaser on landing page). The backend (referral codes, credit logic) is implemented. When ready: restore the dashboard widget, add referral code to account settings, and wire the landing page CTA.
 
+- [ ] **Direct Tee Time Booking — live feature** — Direct booking is listed as "Coming this Summer" on the landing page. Requires a course partner API or proprietary booking layer that removes the GolfNow redirect. When ready: integrate booking API, surface the booking flow within the round creation UX, and remove the teaser card from the landing page.
+
 - [ ] **Membership billing activation** — Stripe is integrated but billing does not begin until June 1, 2026. Before that date: confirm Stripe live keys are populated in Secrets Manager, switch `STRIPE_ENABLED=true` in prod, verify webhook endpoint is registered in the Stripe dashboard, and send a pre-billing heads-up email to all users. Full dunning sequence (day 3 and day 7 follow-up after failed payment) is not yet implemented.
 
 ---
@@ -46,7 +48,7 @@ Living backlog of features, improvements, and fixes. Add items here and they'll 
 
 - [ ] **MFA for sensitive operations** — Add multi-factor authentication challenges before high-risk actions: Stripe billing management, account deletion, and admin-panel access. Evaluate TOTP (Google Authenticator / Authy) vs. email OTP. Backend needs an `mfa_secret` column, a verify-code endpoint, and a step-up token pattern. Frontend needs a modal challenge before the sensitive action proceeds.
 
-- [ ] **Support email — permanent address** — `ryanrpick@gmail.com` is set as the support address temporarily across `application.properties`, all email templates, and all web pages (terms, privacy, account, support). Replace with a permanent `support@golfsync.com` or similar before public launch and update `SUPPORT_EMAIL` in Secrets Manager / `.env.prod`.
+- [x] **Support email — permanent address** — `support@golfsync.io` is now set across `application.properties`, `EmailService.java`, all web pages (terms, privacy, account, support), and CDK config (`bin/golfsync-cdk.ts`).
 
 - [ ] **CDK TODOs — Route53 hosted zone and ACM certificate** — `golfsync-cdk.ts` has two outstanding values in the prod stack that must be populated before prod HTTPS works: (1) `GOLFSYNC_HOSTED_ZONE_ID` — find via `aws route53 list-hosted-zones`; (2) `GOLFSYNC_CERT_ARN` — request via ACM in us-east-1. Document the values in `AWS_DeploymentGuide.md` once confirmed.
 

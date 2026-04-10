@@ -46,7 +46,7 @@
 | 1 | **Activate billing** — confirm Stripe live keys in Secrets Manager, set `STRIPE_ENABLED=true` in prod, register webhook endpoint in Stripe dashboard, send pre-billing email to all users | CFO/CTO |
 | 2 | **Decide GolfNow integration or reposition** — negotiate GolfNow/Supreme Golf/TeeOff API, or rebrand as "round management" | COO |
 | 3 | **3-step onboarding flow** — find home course → invite a friend → create first round | CMO |
-| 4 | **Update support email** — replace `ryanrpick@gmail.com` with a permanent `support@golfsync.com` address before public launch | COO |
+| 4 | ~~**Update support email**~~ — `support@golfsync.io` is set across all touchpoints | ✅ Done |
 
 ### Near-Term (post-June 1)
 

@@ -537,5 +537,4 @@ When a user contacts support:
 6. AWS Console → SES → Sending statistics — if email delivery is suspect
 7. For data fixes, use ECS Exec + MySQL (§9 + §11) — **never write directly to prod DB without first understanding the cause**
 
-**Support email (current):** `ryanrpick@gmail.com`  
-**Permanent address (planned):** `support@golfsync.com` — update before public launch
+**Support email:** `support@golfsync.io`
