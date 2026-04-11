@@ -2,7 +2,7 @@
 
 Step-by-step checklist for deploying the Dev and Prod stacks using AWS CDK.
 
-**Last updated:** 2026-04-10
+**Last updated:** 2026-04-11
 
 ---
 
@@ -52,21 +52,6 @@ export GOLFSYNC_DEV_ALARM_EMAIL=support@golfsync.io
 export GOLFSYNC_PROD_ALARM_EMAIL=support@golfsync.io
 ```
 
-Or run this script to auto-populate account IDs from your SSO sessions:
-```bash
-aws sso login --profile golfsync-dev
-aws sso login --profile golfsync-prod
-
-DEV_ACCOUNT=$(aws sts get-caller-identity --profile golfsync-dev --query Account --output text)
-PROD_ACCOUNT=$(aws sts get-caller-identity --profile golfsync-prod --query Account --output text)
-
-grep -q "GOLFSYNC_DEV_ACCOUNT_ID"  ~/.zshrc || echo "\nexport GOLFSYNC_DEV_ACCOUNT_ID=$DEV_ACCOUNT"  >> ~/.zshrc
-grep -q "GOLFSYNC_PROD_ACCOUNT_ID" ~/.zshrc || echo "export GOLFSYNC_PROD_ACCOUNT_ID=$PROD_ACCOUNT" >> ~/.zshrc
-grep -q "GOLFSYNC_DEV_ALARM_EMAIL" ~/.zshrc || echo "export GOLFSYNC_DEV_ALARM_EMAIL=support@golfsync.io" >> ~/.zshrc
-grep -q "GOLFSYNC_PROD_ALARM_EMAIL" ~/.zshrc || echo "export GOLFSYNC_PROD_ALARM_EMAIL=support@golfsync.io" >> ~/.zshrc
-source ~/.zshrc
-```
-
 > **Why account IDs matter:** With `GOLFSYNC_DEV_ACCOUNT_ID` set, running `cdk deploy GolfSyncDevStack --profile golfsync-prod` will fail — CDK detects the account mismatch before touching anything.
 
 ### 2. Bootstrap CDK (one-time per workload account)
@@ -92,43 +77,50 @@ CDK builds container images from source (`golfsync-api`, `golfsync-web`) and pus
 
 ---
 
-## Dev Stack (`GolfSyncDevStack`)
+## Dev Stack (`GolfSyncDevStack`) ✅ Deployed
 
-### Step 1 — Deploy
+**Live URLs:**
+- CloudFront (HTTPS): `https://dehi6vc3s5x1l.cloudfront.net` ← use this
+- ALB (HTTP only): `http://GolfSy-Alb16-Ms3amAWFxLgj-225436661.us-east-1.elb.amazonaws.com`
+
+> Always use the CloudFront URL. The ALB is plain HTTP and browser APIs (geolocation, `crypto.randomUUID`, secure cookies) require HTTPS.
+
+### Step 1 — Deploy ✅ Done
+
 ```bash
-cd golfsync-cdk
-npx cdk deploy GolfSyncDevStack --profile golfsync-dev
+scripts/deploy.sh dev
 ```
-Note the `AppUrl` output — this is the ALB DNS name (e.g. `http://GolfSync-Alb-xxxx.us-east-1.elb.amazonaws.com`).
 
-> **CORS:** CDK automatically sets `GOLFSYNC_CORS_ALLOWED_ORIGIN` to the ALB DNS name — no manual step needed.
+The script handles: SSO check → `cdk diff` review → Liquibase prompt → deploy → ECS stabilization watch.
 
-### Step 2 — Run Liquibase migrations
+CDK outputs the `DevCdnUrl` (CloudFront HTTPS URL) and `AppUrl` (plain ALB). Use `DevCdnUrl`.
 
-The API container has Liquibase disabled (`SPRING_LIQUIBASE_ENABLED=false`) to prevent startup races. A separate Liquibase ECS task must run first to create the database schema.
+> **CORS:** CDK automatically sets `GOLFSYNC_CORS_ALLOWED_ORIGIN` to the CloudFront URL — no manual step needed.
 
-> **Run this before every deployment that includes database migrations.** If skipped, the API will fail its health check and ECS will not bring it up.
+### Step 2 — Liquibase migrations ✅ Done (runs inline in dev)
 
-1. Get the subnet and security group IDs from the dev VPC:
+Dev runs Liquibase automatically inside the API container on startup (`SPRING_LIQUIBASE_ENABLED=true`).
+The `SPRING_LIQUIBASE_CONTEXTS=dev` flag seeds admin/test/test2 accounts (migration `024`).
+
+**For subsequent deploys that include DB schema changes**, use the deploy script (it will prompt):
 ```bash
-# Public subnet ID (Liquibase task runs in the public subnet in dev)
-aws ec2 describe-subnets \
-  --filters "Name=tag:aws-cdk:subnet-name,Values=public" \
-            "Name=tag:aws-cdk:subnet-type,Values=Public" \
-  --query "Subnets[0].SubnetId" --output text \
-  --profile golfsync-dev
+scripts/deploy.sh dev
+# Answer "y" to the Liquibase prompt to run the separate migration task before deploying
+```
 
-# API security group ID
+If you need to run the Liquibase task manually:
+```bash
+# Get subnet and security group IDs
+aws ec2 describe-subnets \
+  --filters "Name=tag:aws-cdk:subnet-name,Values=public" "Name=tag:aws-cdk:subnet-type,Values=Public" \
+  --query "Subnets[0].SubnetId" --output text --profile golfsync-dev
+
 aws ec2 describe-security-groups \
   --filters "Name=tag:aws:cloudformation:stack-name,Values=GolfSyncDevStack" \
             "Name=group-name,Values=*ApiSg*" \
-  --query "SecurityGroups[0].GroupId" --output text \
-  --profile golfsync-dev
-```
+  --query "SecurityGroups[0].GroupId" --output text --profile golfsync-dev
 
-2. Copy the `LiquibaseMigrateCommand` from the CDK output, fill in the IDs, then run it:
-```bash
-# The dev task has SPRING_LIQUIBASE_CONTEXTS=dev baked in — seeds admin/test/test2 accounts.
+# Run migration task (use LiquibaseMigrateCommand from CDK outputs)
 aws ecs run-task \
   --cluster golfsync-dev \
   --task-definition <LiquibaseTaskDefArn> \
@@ -137,23 +129,19 @@ aws ecs run-task \
   --count 1 \
   --started-by pre-deploy-liquibase \
   --profile golfsync-dev
-```
 
-3. Wait for exit code 0:
-```bash
+# Wait for exit code 0
 aws ecs describe-tasks --cluster golfsync-dev --tasks <task-arn> \
   --query "tasks[0].{status:lastStatus,exit:containers[0].exitCode}" \
   --profile golfsync-dev
 ```
 
-### Step 3 — Update `appBaseUrl`
-Open `golfsync-cdk/bin/golfsync-cdk.ts` and update the dev stack config:
-```ts
-appBaseUrl: 'http://<ALB-DNS-NAME-FROM-OUTPUT>',
-```
-Then redeploy: `npx cdk deploy GolfSyncDevStack --profile golfsync-dev`
+### Step 3 — Update `appBaseUrl` ✅ Done
 
-This URL is embedded in email invite links and the CAN-SPAM unsubscribe footer.
+Already set in `golfsync-cdk/bin/golfsync-cdk.ts`:
+```ts
+appBaseUrl: 'https://dehi6vc3s5x1l.cloudfront.net',
+```
 
 ### Step 4 — Populate secrets
 
@@ -211,59 +199,39 @@ Migration `024` runs automatically in dev (seeded via `SPRING_LIQUIBASE_CONTEXTS
 
 ---
 
-## Prod Stack (`GolfSyncProdStack`)
+## Prod Stack (`GolfSyncProdStack`) — Deploy in progress
 
-### Step 1 — Create a Route53 hosted zone for `golfsync.com`
-If the domain is not already in Route53, create a hosted zone:
-- AWS Console -> Route53 -> Hosted Zones -> Create hosted zone -> `golfsync.com`
-- Update your domain registrar's nameservers to match the NS records Route53 provides.
+### Step 1 — Create a Route53 hosted zone ✅ Done
 
-Find the hosted zone ID:
+Hosted zone ID: `Z07602281XXQ30UW6PUD4` (hardcoded in `golfsync-cdk/bin/golfsync-cdk.ts`)
+
+### Step 2 — Request an ACM certificate ✅ Done
+
+Certificate ARN: `arn:aws:acm:us-east-1:805865757850:certificate/61583a35-628b-43f1-8323-163bf36252fa`
+(hardcoded in `golfsync-cdk/bin/golfsync-cdk.ts` — no env var needed at deploy time)
+
+### Step 3 — Deploy ⏳ In progress
+
+No env vars needed — hosted zone ID and cert ARN are hardcoded in CDK config.
+
 ```bash
-aws route53 list-hosted-zones \
-  --query "HostedZones[?Name=='golfsync.com.'].Id" --output text \
-  --profile golfsync-prod
-# Returns: /hostedzone/Z1234ABCDE5678  -- the ID is the part after /hostedzone/
+scripts/deploy.sh prod --skip-liquibase
 ```
 
-### Step 2 — Request an ACM certificate for HTTPS
-```bash
-# Must be in us-east-1 for ALB
-aws acm request-certificate \
-  --domain-name golfsync.com \
-  --subject-alternative-names '*.golfsync.com' \
-  --validation-method DNS \
-  --region us-east-1 \
-  --profile golfsync-prod
-
-# Get the certificate ARN
-aws acm list-certificates \
-  --query "CertificateSummaryList[?DomainName=='golfsync.com'].CertificateArn" \
-  --output text \
-  --region us-east-1 \
-  --profile golfsync-prod
-```
-
-AWS Console -> Certificate Manager -> the new cert -> "Create records in Route53"
-
-Wait for the certificate status to show **Issued** before deploying (usually 1-5 minutes after DNS propagation).
-
-### Step 3 — Set env vars and deploy
-```bash
-export GOLFSYNC_HOSTED_ZONE_ID=<your-hosted-zone-id>
-export GOLFSYNC_CERT_ARN=<your-acm-cert-arn>
-
-cd golfsync-cdk
-npx cdk deploy GolfSyncProdStack --profile golfsync-prod
-```
+> **First prod deploy:** Use `--skip-liquibase` because the stack doesn't exist yet and the
+> Liquibase task ARN can't be read from outputs until after the stack is created. Run Liquibase
+> manually (Step 4) after the stack finishes.
 
 This creates:
-- Route53 A alias records: `golfsync.com` and `www.golfsync.com` to ALB
+- Route53 A alias records: `golfsync.com` and `www.golfsync.com` → ALB
 - ALB HTTPS listener on port 443 (TLS terminated using the ACM cert)
 - ALB HTTP listener on port 80 with permanent redirect to HTTPS
+- CloudFront distribution in front of the ALB
 - SES email identity for `golfsync.com` (outputs DNS verification records)
 
 ### Step 4 — Run Liquibase migrations
+
+Run after Step 3 completes and the stack outputs are available.
 
 ```bash
 # Private subnet ID (prod tasks run in private subnets)
@@ -280,7 +248,7 @@ aws ec2 describe-security-groups \
   --query "SecurityGroups[0].GroupId" --output text \
   --profile golfsync-prod
 
-# Run the task (no --contexts flag — migration 024 is skipped in prod)
+# Run migration task (use LiquibaseMigrateCommand from CDK outputs — no dev contexts flag)
 aws ecs run-task \
   --cluster golfsync-prod \
   --task-definition <LiquibaseTaskDefArn> \
@@ -296,10 +264,18 @@ aws ecs describe-tasks --cluster golfsync-prod --tasks <task-arn> \
   --profile golfsync-prod
 ```
 
+After Liquibase succeeds, force a fresh API deployment so the service picks up the schema:
+```bash
+aws ecs update-service --cluster golfsync-prod \
+  --service <ApiServiceName> --force-new-deployment \
+  --profile golfsync-prod
+```
+
 ### Step 5 — Verify SES domain ownership
+
 After deploy, CDK outputs CNAME/TXT records for SES domain verification:
-- AWS Console -> Route53 -> Hosted Zones -> `golfsync.com` -> Create record
-- Or: AWS Console -> SES -> Verified Identities -> `golfsync.com` -> view the records
+- AWS Console → Route53 → Hosted Zones → `golfsync.com` → Create record
+- Or: AWS Console → SES → Verified Identities → `golfsync.com` → view the records
 
 Wait for SES to show the domain as **Verified** before expecting emails to send.
 
@@ -313,7 +289,7 @@ aws secretsmanager put-secret-value \
   --secret-string '{"username":"AKIAIOSFODNN7EXAMPLE","password":"<derived-smtp-password>"}' \
   --profile golfsync-prod
 
-# OpenAI (optional — AI assistant disabled if missing)
+# OpenAI (required — AI assistant disabled if missing)
 aws secretsmanager put-secret-value \
   --secret-id golfsync-prod/openai-api-key \
   --secret-string 'sk-...' \
@@ -345,18 +321,17 @@ aws secretsmanager put-secret-value \
 > **Billing activation checklist (June 1, 2026):**
 > 1. Stripe live keys in Secrets Manager (above)
 > 2. Register webhook in Stripe Dashboard: `https://golfsync.com/api/stripe/webhook`
-> 3. Set `STRIPE_ENABLED=true` in the prod ECS task environment and redeploy
-> 4. Send pre-billing notification email to all users
+> 3. Send pre-billing notification email to all users
 
 > **Auto-generated — no action needed:**
 > `golfsync-prod/db-credentials` and `golfsync-prod/jwt-secret` are generated by CDK automatically.
 
-### Step 7 — Set the admin UI password
+### Step 7 — Set the admin password
 
-Migration `001` creates the `admin` account. Migration `024` is dev-only — no preset password exists in prod. You must set it manually.
+Migration `001` creates the `admin` account. Migration `024` is dev-only — no preset password exists in prod.
 
 **Option A — Forgot password flow (simplest, requires SES to be working):**
-Go to `https://golfsync.com/login` -> Forgot Password -> enter `admin@golfsync.io`.
+Go to `https://golfsync.com/login` → Forgot Password → enter `admin@golfsync.io`.
 
 **Option B — SSM port forwarding to RDS:**
 
@@ -416,8 +391,9 @@ aws ec2 terminate-instances --instance-ids $INSTANCE_ID --profile golfsync-prod
 ```
 
 ### Step 8 — Request SES production access
+
 By default, SES accounts are in sandbox mode and can only send to verified addresses. To send to any address:
-- AWS Console -> SES -> Account dashboard -> Request production access
+- AWS Console → SES → Account dashboard → Request production access
 - Explain use case: transactional and marketing email for a golf social app; includes CAN-SPAM opt-out mechanism
 
 ---
@@ -437,7 +413,7 @@ By default, SES accounts are in sandbox mode and can only send to verified addre
 | `golfsync-prod/db-credentials` | CDK (auto) | Auto | RDS MySQL password |
 | `golfsync-prod/jwt-secret` | CDK (auto) | Auto | JWT signing key |
 | `golfsync-prod/ses-smtp-credentials` | You (Step 6) | Required | SES SMTP for prod email |
-| `golfsync-prod/openai-api-key` | You (Step 6) | Optional | AI assistant |
+| `golfsync-prod/openai-api-key` | You (Step 6) | Required | AI assistant |
 | `golfsync-prod/serper-api-key` | You (Step 6) | Optional | Tournament discovery |
 | `golfsync-prod/stripe-secret-key` | You (Step 6) | June 1 | Stripe live key |
 | `golfsync-prod/stripe-publishable-key` | You (Step 6) | June 1 | Stripe live key |
@@ -455,8 +431,9 @@ These must be set in your shell (`~/.zshrc`) before running any CDK command.
 | `GOLFSYNC_PROD_ACCOUNT_ID` | Prod | Pins GolfSyncProdStack to the prod workload account |
 | `GOLFSYNC_DEV_ALARM_EMAIL` | Dev | CloudWatch alarm notification email |
 | `GOLFSYNC_PROD_ALARM_EMAIL` | Prod | CloudWatch alarm notification email |
-| `GOLFSYNC_HOSTED_ZONE_ID` | Prod | Route53 hosted zone ID for `golfsync.com` |
-| `GOLFSYNC_CERT_ARN` | Prod | ACM certificate ARN for HTTPS |
+
+> `GOLFSYNC_HOSTED_ZONE_ID` and `GOLFSYNC_CERT_ARN` are no longer needed as env vars —
+> both are hardcoded in `golfsync-cdk/bin/golfsync-cdk.ts`.
 
 ---
 
@@ -469,6 +446,7 @@ npx cdk destroy GolfSyncDevStack --profile golfsync-dev
 
 # Prod (deletion protection is ON on RDS — must disable first)
 # AWS Console -> RDS -> Modify instance -> uncheck deletion protection -> apply immediately
+# Prod stack also has CloudFormation termination protection — disable in Console first
 npx cdk destroy GolfSyncProdStack --profile golfsync-prod
 ```
 
