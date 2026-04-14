@@ -411,23 +411,57 @@ ps aux | grep java
 
 ## 10. Admin Dashboard — What's Where
 
-The admin panel at `https://golfsync.com/admin` requires an ADMIN-role account. Use the tabs across the top to navigate.
+The admin panel at `https://golfsync.com/admin` is accessible by two roles:
 
-| Tab | What you can do |
+| Role | Access level |
 |---|---|
-| **Analytics** | Signups/day, trial→paid conversions, active trials, churn rate, round creation rate |
-| **Users** | Full user list — membership state, ban status, role, opt-out; delete a user |
-| **Rounds** | All rounds across all users; update status (PENDING/BOOKED/COMPLETED/CANCELLED); delete |
-| **User Reports** | Reports submitted by users about other users; accept (ban) or deny with reason |
-| **Promo Codes** | Create new promo codes (FREE / % discount / flat discount); deactivate existing ones |
-| **Featured** | Promote courses and tournaments to appear highlighted in the app |
+| **ADMIN** | Full panel — all tabs, all actions |
+| **TOURNAMENT_SUPPORT** | Tournament-only view — Featured and Reports tabs; no access to Users, Rounds, Promos, Analytics, or other admin sections |
 
-### Promoting a user to ADMIN role
+Use the tabs across the top to navigate.
 
-The admin dashboard does not yet have a role-change UI. Update via DB:
+| Tab | Who can access | What you can do |
+|---|---|---|
+| **Analytics** | ADMIN | Signups/day, trial→paid conversions, active trials, churn rate, round creation rate |
+| **Users** | ADMIN | Full user list — membership state, ban status, role, opt-out; delete a user; assign roles |
+| **Rounds** | ADMIN | All rounds across all users; update status (PENDING/BOOKED/COMPLETED/CANCELLED); delete |
+| **User Reports** | ADMIN | Reports submitted by users about other users; accept (ban) or deny with reason |
+| **Promo Codes** | ADMIN | Create new promo codes (FREE / % discount / flat discount); deactivate existing ones |
+| **Featured** | ADMIN + TOURNAMENT_SUPPORT | Promote courses and tournaments; manage curated tournament data (name, date, location, registration link, format, entry fee); review and moderate tournament reports |
+| **Reports** | ADMIN + TOURNAMENT_SUPPORT | Tournament reports submitted by users — approve or deny |
+
+### Roles
+
+GolfSync has three user roles:
+
+| Role | Description |
+|---|---|
+| `USER` | Standard end user — default for all registrations |
+| `TOURNAMENT_SUPPORT` | Can manage all tournament data (featured/curated tournaments, registration links, tournament reports) via the admin panel; no other admin access |
+| `ADMIN` | Full admin access — all panel tabs, user management, impersonation, role assignment |
+
+### Assigning / changing a user's role
+
+**Via the admin dashboard (recommended):**
+Admin dashboard → **Users** tab → find the user → click the role dropdown in the Role column → select the new role. The change is applied immediately.
+
+**Via DB (emergency fallback only):**
 ```sql
 UPDATE users SET role = 'ADMIN' WHERE email = 'admin@golfsync.com';
+-- Valid values: USER, TOURNAMENT_SUPPORT, ADMIN
 ```
+
+### TOURNAMENT_SUPPORT — what they can do
+
+A user with the `TOURNAMENT_SUPPORT` role logs in to `https://golfsync.com/admin` and sees a restricted "Tournament Management" view with only the **Featured** and **Reports** tabs.
+
+From there they can:
+- Add and edit **Featured Tournaments** (name, date, location, lat/lng, format, entry fee, registration URL)
+- Add, edit, and deactivate **Curated Tournaments** (all fields including registration URL — the URL that appears when a user clicks "Register" on a tournament)
+- Trigger a **Serper data refresh** to re-pull external tournament data
+- Review and decide on **Tournament Reports** submitted by users
+
+**Key behavior:** Any change made by ADMIN or TOURNAMENT_SUPPORT sets `adminLocked = true` on curated tournament rows. This prevents the weekly Serper auto-refresh job from overwriting manually entered data (including registration links).
 
 ### Banning / unbanning a user
 
