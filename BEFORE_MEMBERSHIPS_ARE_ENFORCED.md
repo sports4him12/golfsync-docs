@@ -54,7 +54,6 @@ The webhook code is ready but the endpoint must be manually registered in the St
 - [ ] In the Stripe Dashboard → Developers → Webhooks, add endpoint: `https://golfsync.io/api/stripe/webhook`
 - [ ] Select these events: `checkout.session.completed`, `invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`, `customer.subscription.deleted`
 - [ ] Copy the `whsec_...` signing secret and set `STRIPE_WEBHOOK_SECRET` in Secrets Manager
-- [x] Fix the wrong path in `golfsync-docs/admin-runbook.md` — corrected from `/api/payments/webhook` to `/api/stripe/webhook`
 
 ---
 
@@ -81,3 +80,9 @@ Every user gets a 30-day trial on registration. Users who signed up more than 30
 - [ ] Deploy via `./scripts/deploy.sh prod` (never `npx cdk deploy` directly)
 - [ ] Confirm ECS tasks pick up the new Stripe secrets (secrets are read at container start — a rolling restart is required after setting them)
 - [ ] Confirm `/payments/config` API returns `"enabled": true` in production
+
+---
+
+## Completed
+
+- 2026-04-18 — Fixed the wrong webhook path in `golfsync-docs/admin-runbook.md` (corrected from `/api/payments/webhook` to `/api/stripe/webhook`).

@@ -64,11 +64,7 @@ Work through this top to bottom. Every item must be checked before real users ar
   ```
 - [ ] ACM DNS validation CNAME records added to Route53 (AWS Console → ACM → "Create records in Route53")
 - [ ] ACM certificate status = **Issued**
-- [ ] `GOLFSYNC_HOSTED_ZONE_ID` and `GOLFSYNC_CERT_ARN` env vars set:
-  ```bash
-  export GOLFSYNC_HOSTED_ZONE_ID=Z1234ABCDE5678
-  export GOLFSYNC_CERT_ARN=arn:aws:acm:us-east-1:...
-  ```
+- [x] `GOLFSYNC_HOSTED_ZONE_ID` and `GOLFSYNC_CERT_ARN` — **no longer env vars**. Both values are hardcoded on `prodConfig` in `golfsync-cdk/bin/golfsync-cdk.ts` (`hostedZoneId`, `certificateArn`). Verify those two fields are populated with the right zone/cert ARN before deploying; no shell export required.
 
 ---
 

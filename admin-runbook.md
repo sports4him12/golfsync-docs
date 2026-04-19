@@ -1,7 +1,7 @@
 # Golf Sync — Admin & Troubleshooting Runbook
 
 **Audience:** Admin operators responding to user issues or system alerts  
-**Last updated:** 2026-04-17
+**Last updated:** 2026-04-19
 
 ---
 
@@ -60,9 +60,19 @@ fields @timestamp, @message
 | filter @message like /invoice.payment_failed/ or @message like /payment failed/
 | sort @timestamp desc
 
--- Email send failures
+-- Email send failures (new-style tag, covers all 23 EmailService methods)
 fields @timestamp, @message
-| filter @message like /Failed to send/ or @message like /MailException/
+| filter @message like /\[EMAIL_FAIL\]/
+| sort @timestamp desc
+
+-- Any external-API degradation (Serper / OpenAI / Stripe / Tournament refresh / Email)
+fields @timestamp, @message
+| filter @message like /\[EMAIL_FAIL\]/ or @message like /\[SERPER_FAIL\]/ or @message like /\[OPENAI_FAIL\]/ or @message like /\[PAYMENT_FAIL\]/ or @message like /\[TOURNAMENT_REFRESH_FAIL\]/
+| sort @timestamp desc
+
+-- Stripe card declines (user-actionable — customer sees the reason)
+fields @timestamp, @message
+| filter @message like /\[PAYMENT_CARD\]/
 | sort @timestamp desc
 
 -- Rate limit hits

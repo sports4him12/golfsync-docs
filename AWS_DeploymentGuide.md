@@ -2,7 +2,7 @@
 
 Step-by-step checklist for deploying the Dev and Prod stacks using AWS CDK.
 
-**Last updated:** 2026-04-11
+**Last updated:** 2026-04-19
 
 ---
 
@@ -395,6 +395,56 @@ aws ec2 terminate-instances --instance-ids $INSTANCE_ID --profile golfsync-prod
 By default, SES accounts are in sandbox mode and can only send to verified addresses. To send to any address:
 - AWS Console → SES → Account dashboard → Request production access
 - Explain use case: transactional and marketing email for a golf social app; includes CAN-SPAM opt-out mechanism
+
+---
+
+## Infrastructure Additions (April 2026)
+
+The core Dev + Prod stacks above capture the baseline. These additions have shipped since:
+
+### Beta stack (`GolfSyncBetaStack`)
+
+Isolated environment for testing feature branches (e.g. League Management) without touching dev or prod.
+
+- Runs in the **dev AWS account** (same profile: `golfsync-dev`), so no extra cost vs. the baseline dev account.
+- Scale to zero when not in use: `./scripts/deploy.sh beta --shutdown` sets ECS desired-count to 0 on both api and web services.
+- Fully tear down: `./scripts/deploy.sh beta --destroy` — skips the termination-protection prompt and drops the stack entirely.
+- Deploy branch gate: beta deploys require `golfsync-api` and `golfsync-web` to be checked out on the `LeagueMockUp` branch; CDK can stay on `main`.
+- No Route53 or custom domain — accessed via the ALB URL.
+
+### WAF US-only geo-restriction (prod ALB)
+
+Prod ALB now sits behind an AWS WAF Web ACL that blocks all non-US traffic. This keeps the geographic scope consistent with the business focus and cuts bot/scraper load from outside the US.
+
+- Managed by CDK — no manual WAF configuration.
+- To temporarily allow a non-US visitor (e.g. for demo), add an exception rule in the AWS Console; revert after.
+
+### Route53 uptime health check + alarm
+
+Prod has a Route53 HTTPS health check against `/healthz` on golfsync.io, with a CloudWatch alarm wired to the existing prod SNS topic. If the check fails for 2 consecutive minutes, the alarm email (`GOLFSYNC_PROD_ALARM_EMAIL`) fires.
+
+### RDS MySQL 8.4 LTS upgrade flag
+
+CDK now sets `allowMajorVersionUpgrade=true` on the prod RDS instance, letting us move from MySQL 8.0 → 8.4.8 LTS without recreating the instance. **Must upgrade before MySQL 8.0 EOL on 2026-07-31.** See `golfsync-cdk/lib/golfsync-cdk-stack.ts` for the `engineVersion` pin.
+
+### `golfsync-ops` IAM user
+
+Read-only IAM user for CloudWatch + ECS console access (log tailing, service status, task descriptions) without granting full AWS console access. Console sign-in URL and username are exposed as CDK stack outputs on prod.
+
+### Admin signup notification email
+
+When a new account is created in prod, the API sends a notification to the operator. Gated by the `ADMIN_SIGNUP_NOTIFICATION_EMAIL` env var — unset (dev, beta) = silent. Wired via the CDK `adminSignupNotificationEmail` field on `EnvironmentConfig`; current prod value is `ryanrpick@golfsync.io`.
+
+### Universal-link manifest routes (web)
+
+The web app serves two route handlers at `/.well-known/apple-app-site-association` and `/.well-known/assetlinks.json` so iOS and Android can verify Golf Sync as a handler for `https://golfsync.io/invite/*` URLs.
+
+Both routes require env vars on the prod web task — until set they return 404 cleanly, so deep links gracefully fall back to the custom scheme (`golfsync://invite/<token>`) or mobile Safari:
+
+| Env var | Purpose |
+|---|---|
+| `APPLE_TEAM_ID` | 10-character Apple Developer Team ID; goes into AASA `appID` |
+| `ANDROID_CERT_SHA256` | SHA-256 cert fingerprints (comma-separated) for the upload key and Play App Signing key |
 
 ---
 
