@@ -19,10 +19,26 @@ const qrLeague = fs.readFileSync(path.join(dir, "qr-league-demo.svg"), "utf8");
 const qrCourse = fs.readFileSync(path.join(dir, "qr-course-manager-demo.svg"), "utf8");
 const qr = (svg, px) => svg.replace("<svg ", `<svg width="${px}" height="${px}" style="display:block" `);
 
+// Real Golf Sync wordmark SVGs (white for navy headers, color for light
+// footers). Strip the XML prolog so they inline cleanly; size by height
+// and let width auto-scale the 720:230.66 (~3.123:1) artwork.
+const stripXml = (s) => s.replace(/<\?xml[^>]*\?>\s*/, "").trim();
+const logoWhiteRaw = stripXml(fs.readFileSync(path.join(dir, "logo-white.svg"), "utf8"));
+const logoColorRaw = stripXml(fs.readFileSync(path.join(dir, "logo-color.svg"), "utf8"));
+const AR = 720 / 230.66;
+function logo(variant, height) {
+  const raw = variant === "white" ? logoWhiteRaw : logoColorRaw;
+  const w = Math.round(height * AR);
+  return raw.replace(
+    /<svg /,
+    `<svg width="${w}" height="${height}" style="display:block" `
+  );
+}
+
 const PRICE_LINE =
   'Golf Sync is <b>free for players</b> — that\'s the league app you\'re scoring on. ' +
-  'For organizers &amp; courses: run a tournament day <b>starting at $100/event</b>, ' +
-  'or put your whole course on Golf Sync <b>starting at $200/mo</b>.';
+  'For organizers, run a tournament day <b>starting at $100/event</b>. ' +
+  'For courses, add a digital player experience <b>starting at $200/mo</b>.';
 
 /* ───────────────────────── EMAIL BLOCKS ───────────────────────── */
 function emailBlock({ title, pills, h2, body, btnLabel, url, qrSvg, usage }) {
@@ -31,8 +47,8 @@ function emailBlock({ title, pills, h2, body, btnLabel, url, qrSvg, usage }) {
   <div class="usage-banner">${usage}</div>
   <div class="email-wrap">
     <div class="email-feature">
-      <div class="gs-wordmark"><span class="gs-dot"></span>Golf Sync</div>
-      <div class="tagline">Proud sponsor of the Indoor Golf RVA Summer League</div>
+      <div style="display:flex;justify-content:center;">${logo("white", 40)}</div>
+      <div class="tagline" style="margin-top:16px;">Proud sponsor of the Indoor Golf RVA Summer League</div>
       <div class="pills">${pills.map(p => `<span class="pill">${p}</span>`).join("")}</div>
     </div>
     <div class="email-body">
@@ -46,7 +62,8 @@ function emailBlock({ title, pills, h2, body, btnLabel, url, qrSvg, usage }) {
       </div>
     </div>
     <div class="email-foot">
-      <div class="mark">Golf Sync · golfsync.io</div>
+      <div style="display:flex;justify-content:center;margin-bottom:8px;">${logo("color", 26)}</div>
+      <div class="mark" style="font-size:12px;color:var(--muted);">golfsync.io</div>
       <div class="tag">Leagues, tournaments &amp; courses — one app. Free for players.</div>
     </div>
   </div>
@@ -59,14 +76,14 @@ function sheet({ title, eyebrow, h1, sub, body }) {
 <title>${title}</title><style>${css}</style></head><body>
   <div class="sheet">
     <div class="gs-header">
-      <div class="gs-wordmark"><span class="gs-dot"></span>Golf Sync</div>
+      ${logo("white", 30)}
       <div class="gs-eyebrow">${eyebrow}</div>
       <div class="gs-h1">${h1}</div>
       <div class="gs-sub">${sub}</div>
     </div>
     <div class="gs-body">${body}</div>
     <div class="gs-footer">
-      <div class="row"><div class="mark"><span class="gs-dot"></span>Golf Sync</div><div class="cta">golfsync.io</div></div>
+      <div class="row"><div style="display:flex;align-items:center;">${logo("color", 22)}</div><div class="cta">golfsync.io</div></div>
       <div class="tag" style="margin-top:6px;">Proud sponsor of the Indoor Golf RVA Summer League · Leagues, tournaments &amp; courses, one app.</div>
     </div>
   </div>
@@ -96,8 +113,8 @@ const priceCardSheet = `
     <div class="cap">About our sponsor</div>
     <div style="font-size:13px;line-height:1.55;color:var(--navy);margin-top:4px;">
       <strong>Golf Sync</strong> is the app powering our league — <b style="color:var(--orange)">free for every player</b>.
-      Run an event <b style="color:var(--orange)">starting at $100</b>, or put a whole course on it
-      <b style="color:var(--orange)">starting at $200/mo</b>.
+      Run an event <b style="color:var(--orange)">starting at $100</b>, or add a digital player
+      experience to your course <b style="color:var(--orange)">starting at $200/mo</b>.
     </div>
   </div>`;
 
@@ -197,7 +214,7 @@ const m2_sheet = sheet({
       </div></td>
       <td><div class="card gs">
         <h4>For courses</h4>
-        <p>Your course on the player's phone — scorecard, deals/offers, live leaderboards you broadcast. <b>Starts at $200/mo</b>.</p>
+        <p>A digital player experience for your golfers during the round — live scorecard, deals &amp; offers, on-property leaderboards. <b>Starts at $200/mo</b>.</p>
       </div></td>
     </tr></table>
     <div class="section-label">What golfers get</div>
@@ -210,7 +227,7 @@ const m2_sheet = sheet({
       "Tour Golf Sync for courses",
       "https://golfsync.io/course-manager-demo",
       qrCourse,
-      "See the player scorecard, course deals, and live-leaderboard broadcast. Starts at $200/mo."
+      "See the digital player experience — live scorecard, course deals, on-property leaderboards. Starts at $200/mo."
     )}
     <p class="note">Sample content for Indoor Golf RVA. Pricing shown is Golf Sync's published starting points.</p>
   `,
@@ -263,7 +280,7 @@ const m3_sheet = sheet({
     <table class="feat">
       <tr><td class="tick">✓</td><td class="name">Leagues &amp; season standings</td><td class="desc">Order-of-Merit points across the season, side games, live boards. Free for players.</td></tr>
       <tr><td class="tick">✓</td><td class="name">Tournament days — from $100</td><td class="desc">Leaderboard on the TV, sponsor recognition, post-event recap. Bring your own roster.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Course Manager — from $200/mo</td><td class="desc">Your course on every golfer's phone: scorecard, deals, broadcast leaderboards.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Course Manager — from $200/mo</td><td class="desc">A digital player experience for your golfers: live scorecard, deals &amp; offers, on-property leaderboards.</td></tr>
     </table>
     ${sheetCta(
       "Plan your next season on Golf Sync",

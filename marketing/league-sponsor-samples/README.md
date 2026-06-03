@@ -39,6 +39,14 @@ and the **player app is free**. Each piece has a clickable demo link + QR.
   npm package; inlined by `build.js`.
 
 ## Notes
+- **Real Golf Sync logo** is inlined (`logo-white.svg` on navy headers,
+  `logo-color.svg` on light footers) — copied from
+  `golfsync-web/public/brand/`. Self-contained, no network dependency.
+- **Course framing is value-add, not replacement.** Per the managed-course
+  scope, the course product is a *digital player experience during the
+  round* (live scorecard, deals/offers, on-property leaderboards) — NOT a
+  membership / tee-time / course-ops replacement. Don't reintroduce
+  "your whole course on Golf Sync" type copy.
 - **Voice = Indoor Golf RVA**, not Golf Sync. First person ("our league,"
   "thanks to our sponsor"). These are theirs to publish.
 - **Pricing:** "starting at $100/event" + "$200/mo" + "free for players."
