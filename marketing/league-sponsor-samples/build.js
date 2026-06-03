@@ -1,6 +1,15 @@
-/* Assembles the three self-contained sponsor sample sheets:
-   inlines _shared.css + the demo QR SVGs so each .html is portable
-   (open → Print → Save as PDF; or forward as-is). Run: node build.js */
+/* Sample sponsor content for INDOOR GOLF RVA to publish, featuring
+   GOLF SYNC as their summer-league sponsor — same shape as the real
+   shout-outs they ran for 35x70 / Mulligan Headcovers / Bag Boy.
+
+   Two formats per moment:
+     - email block  (drop into their Mailchimp newsletter)
+     - one-page sheet (polished leave-behind / PDF)
+   Three moments: contest winners, mid-season feature, season recap.
+
+   Voice = Indoor Golf RVA talking to THEIR golfers about their sponsor.
+   Angle = Leagues + Courses, "starting at" pricing, golfer app free.
+   Run: node build.js */
 const fs = require("fs");
 const path = require("path");
 const dir = __dirname;
@@ -8,18 +17,63 @@ const dir = __dirname;
 const css = fs.readFileSync(path.join(dir, "_shared.css"), "utf8");
 const qrLeague = fs.readFileSync(path.join(dir, "qr-league-demo.svg"), "utf8");
 const qrCourse = fs.readFileSync(path.join(dir, "qr-course-manager-demo.svg"), "utf8");
+const qr = (svg, px) => svg.replace("<svg ", `<svg width="${px}" height="${px}" style="display:block" `);
 
-// Scale the inline QR to a fixed box.
-function qrBox(svg) {
-  return svg.replace(
-    "<svg ",
-    '<svg width="84" height="84" style="display:block" '
-  );
+const PRICE_LINE =
+  'Golf Sync is <b>free for players</b> — that\'s the league app you\'re scoring on. ' +
+  'For organizers &amp; courses: run a tournament day <b>starting at $100/event</b>, ' +
+  'or put your whole course on Golf Sync <b>starting at $200/mo</b>.';
+
+/* ───────────────────────── EMAIL BLOCKS ───────────────────────── */
+function emailBlock({ title, pills, h2, body, btnLabel, url, qrSvg, usage }) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>${title}</title><style>${css}</style></head><body>
+  <div class="usage-banner">${usage}</div>
+  <div class="email-wrap">
+    <div class="email-feature">
+      <div class="gs-wordmark"><span class="gs-dot"></span>Golf Sync</div>
+      <div class="tagline">Proud sponsor of the Indoor Golf RVA Summer League</div>
+      <div class="pills">${pills.map(p => `<span class="pill">${p}</span>`).join("")}</div>
+    </div>
+    <div class="email-body">
+      <h2>${h2}</h2>
+      ${body}
+      <div class="price">${PRICE_LINE}</div>
+      <a class="email-btn" href="${url}">${btnLabel}</a>
+      <div class="email-qr">
+        <div class="box">${qr(qrSvg, 104)}</div>
+        <div class="cap">Scan to explore</div>
+      </div>
+    </div>
+    <div class="email-foot">
+      <div class="mark">Golf Sync · golfsync.io</div>
+      <div class="tag">Leagues, tournaments &amp; courses — one app. Free for players.</div>
+    </div>
+  </div>
+</body></html>`;
 }
 
-const wordmark = `<div class="gs-wordmark"><span class="gs-dot"></span>Golf Sync</div>`;
+/* ───────────────────────── ONE-PAGE SHEETS ────────────────────── */
+function sheet({ title, eyebrow, h1, sub, body }) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>${title}</title><style>${css}</style></head><body>
+  <div class="sheet">
+    <div class="gs-header">
+      <div class="gs-wordmark"><span class="gs-dot"></span>Golf Sync</div>
+      <div class="gs-eyebrow">${eyebrow}</div>
+      <div class="gs-h1">${h1}</div>
+      <div class="gs-sub">${sub}</div>
+    </div>
+    <div class="gs-body">${body}</div>
+    <div class="gs-footer">
+      <div class="row"><div class="mark"><span class="gs-dot"></span>Golf Sync</div><div class="cta">golfsync.io</div></div>
+      <div class="tag" style="margin-top:6px;">Proud sponsor of the Indoor Golf RVA Summer League · Leagues, tournaments &amp; courses, one app.</div>
+    </div>
+  </div>
+</body></html>`;
+}
 
-function cta(label, url, qrSvg, blurb) {
+function sheetCta(label, url, qrSvg, blurb) {
   return `
   <table style="width:100%;border-collapse:collapse;background:var(--navy);border-radius:16px;margin-bottom:4px;">
     <tr>
@@ -30,201 +84,204 @@ function cta(label, url, qrSvg, blurb) {
         <a href="${url}" style="font-size:12.5px;font-weight:800;color:#fff;background:var(--orange);text-decoration:none;padding:8px 15px;border-radius:9px;display:inline-block;">${url.replace("https://", "")}</a>
       </td>
       <td style="width:112px;padding:14px 20px 14px 0;text-align:center;vertical-align:middle;">
-        <div style="background:#fff;border-radius:10px;padding:7px;display:inline-block;">${qrBox(qrSvg)}</div>
-        <div style="font-size:9px;color:rgba(255,255,255,0.65);margin-top:5px;letter-spacing:0.5px;">SCAN TO TOUR</div>
+        <div style="background:#fff;border-radius:10px;padding:7px;display:inline-block;">${qr(qrSvg, 84)}</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.65);margin-top:5px;letter-spacing:0.5px;">SCAN TO EXPLORE</div>
       </td>
     </tr>
   </table>`;
 }
 
-function footer() {
-  return `
-  <div class="gs-footer">
-    <div class="row">
-      <div class="mark"><span class="gs-dot"></span>Golf Sync</div>
-      <div class="cta">golfsync.io</div>
+const priceCardSheet = `
+  <div class="sponsor-strip" style="text-align:left;">
+    <div class="cap">About our sponsor</div>
+    <div style="font-size:13px;line-height:1.55;color:var(--navy);margin-top:4px;">
+      <strong>Golf Sync</strong> is the app powering our league — <b style="color:var(--orange)">free for every player</b>.
+      Run an event <b style="color:var(--orange)">starting at $100</b>, or put a whole course on it
+      <b style="color:var(--orange)">starting at $200/mo</b>.
     </div>
-    <div class="tag" style="margin-top:6px;">Run your league. Show your sponsors love. All in one place.</div>
   </div>`;
-}
 
-function page({ title, eyebrow, h1, sub, body }) {
-  return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<title>${title}</title>
-<style>${css}</style></head>
-<body>
-  <div class="sheet">
-    <div class="gs-header">
-      ${wordmark}
-      <div class="gs-eyebrow">${eyebrow}</div>
-      <div class="gs-h1">${h1}</div>
-      <div class="gs-sub">${sub}</div>
-    </div>
-    <div class="gs-body">
-      ${body}
-    </div>
-    ${footer()}
-  </div>
-</body></html>`;
-}
-
-/* ─────────────────────────────────────────────────────────────
-   SHEET 1 — Contest winners + sponsor recognition (the 35x70 / CTP story)
-   ───────────────────────────────────────────────────────────── */
-const sheet1 = page({
-  title: "Golf Sync — Contest Winners & Sponsor Recognition",
-  eyebrow: "For leagues with sponsors",
-  h1: "Your closest-to-the-pin winners — and your sponsor — front and center.",
-  sub: "You already thank your sponsors and shout out your winners. Golf Sync captures it as it happens and turns it into something you can send.",
+/* =================================================================
+   MOMENT 1 — CONTEST WINNERS  (their 35x70 shout-out shape)
+   ================================================================= */
+const m1_email = emailBlock({
+  title: "IGRVA × Golf Sync — Contest Winners",
+  usage: "DRAFT for Indoor Golf RVA's newsletter — featuring Golf Sync as league sponsor. Swap in your real winners; edit freely.",
+  pills: ["Leagues", "Tournaments", "Courses"],
+  h2: "Congrats to our closest-to-the-pin winners — James D &amp; Luke P!",
   body: `
-    <div class="section-label">The moment, automated</div>
+    <p>Huge thanks to <strong>Golf Sync</strong> for sponsoring our Summer League.
+    Every shot you hit this season is scored in the Golf Sync app, and our
+    closest-to-the-pin results went up on the bay leaderboard the second they
+    happened — winners and all.</p>
+    <p>Golf Sync is a Richmond golf-tech company building the app that runs
+    leagues like ours. If you organize a tournament or run a course, they're
+    worth a look — and for you, the player, it's <strong>free</strong>.</p>`,
+  btnLabel: "Explore Golf Sync for your league",
+  url: "https://golfsync.io/league/demo",
+  qrSvg: qrLeague,
+});
+
+const m1_sheet = sheet({
+  title: "IGRVA × Golf Sync — Contest Winners (sheet)",
+  eyebrow: "Indoor Golf RVA Summer League · Sponsor feature",
+  h1: "Closest to the pin: James D &amp; Luke P — scored live on Golf Sync.",
+  sub: "A sample of how Indoor Golf RVA features its league sponsor, Golf Sync, in a winners shout-out.",
+  body: `
+    <div class="section-label">This week in the league</div>
     <p class="lede">
-      Tag a contest with its sponsor once. The instant you log the winner,
-      <strong>their logo rides next to the result</strong> — on the in-room TV
-      leaderboard all day, on your league page, and in the post-event recap you
-      send the sponsor. No screenshots, no Canva, no "I'll post it later."
+      Our closest-to-the-pin contest was scored in the <strong>Golf Sync</strong>
+      app and shown on the bay leaderboard the moment it happened. Thanks to our
+      sponsor Golf Sync — the Richmond-built app that runs our whole Summer League.
     </p>
-
-    <table class="compare"><tr>
-      <td><div class="card hand">
-        <h4>How it works today</h4>
-        <p>Snap a phone photo of the winner's card, crop it, write the caption, find the sponsor logo, build the email. Every week.</p>
-      </div></td>
-      <td><div class="card gs">
-        <h4>With Golf Sync</h4>
-        <p>Log "Closest to the Pin — James D, 3'4&quot;" with 35x70 tagged as the sponsor. It's on the TV and the recap instantly, branded.</p>
-      </div></td>
-    </tr></table>
-
     <div class="sponsor-strip">
-      <div class="cap">Closest to the Pin &nbsp;•&nbsp; Sponsored by</div>
-      <div class="who">35x70 Golf Co.</div>
-      <div class="meta">Winner: James D &nbsp;·&nbsp; 3' 4"&nbsp; — shown on the TV board &amp; the league page</div>
+      <div class="cap">Closest to the Pin &nbsp;•&nbsp; Scored &amp; shown on</div>
+      <div class="who">Golf Sync</div>
+      <div class="meta">Winners: James D &amp; Luke P — live on the bay TV and every player's phone</div>
     </div>
-
-    <div class="section-label">What's included</div>
+    <div class="section-label">Why we run on Golf Sync</div>
     <table class="feat">
-      <tr><td class="tick">✓</td><td class="name">Sponsor-tagged contests</td><td class="desc">Closest to the Pin, Longest Drive, Longest Putt, and more — each can carry a sponsor's name &amp; logo.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Plan ahead, fill winners later</td><td class="desc">Set your contest slate before the night; the sponsor's logo shows as "Winner TBD" until you tap in the result.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Live TV leaderboard</td><td class="desc">Cast standings + contests + sponsors to any screen in the bay. Winners and sponsor logos rotate on-screen automatically.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Auto recap to the sponsor</td><td class="desc">After the event, the sponsor gets a branded recap — winners, their logo, and how many golfers saw it.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Live leaderboards &amp; contests</td><td class="desc">Standings and closest-to-the-pin update on the bay TV and in players' pockets in real time.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Side games built in</td><td class="desc">Skins, Wolf, Nassau, Vegas, Bingo-Bango-Bongo, Match Play, Stableford — no side spreadsheet.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Free for players</td><td class="desc">Everyone in the league scores on it at no cost. Organizers &amp; courses are the paid side.</td></tr>
     </table>
-
-    ${cta(
-      "Tour a live league with sponsored contests",
+    ${priceCardSheet}
+    ${sheetCta(
+      "Run your own league or tournament",
       "https://golfsync.io/league/demo",
       qrLeague,
-      "See the leaderboard, the contest board, and how a sponsor's logo follows the winner — set up just like your winter league."
+      "Tour a live league on Golf Sync — leaderboards, contests, side games. Tournament days start at $100."
     )}
-    <p class="note">Sample layout. Colors, names, and prizes are configurable per league.</p>
+    <p class="note">Sample content for Indoor Golf RVA. Swap in real winners/photos before sending.</p>
   `,
 });
 
-/* ─────────────────────────────────────────────────────────────
-   SHEET 2 — Season-long league sponsorship (the Mulligan Headcovers story)
-   ───────────────────────────────────────────────────────────── */
-const sheet2 = page({
-  title: "Golf Sync — Season-Long League Sponsorship",
-  eyebrow: "For league operators",
-  h1: "One sponsor, recognized all season — not just in one email.",
-  sub: "Run the whole league on Golf Sync: standings, side games, and a sponsor whose brand shows up every week the league is live.",
+/* =================================================================
+   MOMENT 2 — MID-SEASON FEATURE  (their Bag Boy "shop local" shape)
+   ================================================================= */
+const m2_email = emailBlock({
+  title: "IGRVA × Golf Sync — Mid-Season",
+  usage: "DRAFT for Indoor Golf RVA's newsletter — mid-season sponsor feature. Edit freely.",
+  pills: ["Built in RVA", "Leagues", "Courses"],
+  h2: "What do Indoor Golf RVA and Golf Sync have in common?",
   body: `
-    <div class="section-label">Give a season sponsor season-long value</div>
-    <p class="lede">
-      A sponsor who backs the whole winter league deserves more than one thank-you
-      post. With Golf Sync, <strong>their banner runs across the season</strong> —
-      on every leaderboard, the standings page, and the wrap-up recap that proves
-      how many golfers they reached.
-    </p>
-
-    <div class="sponsor-strip">
-      <div class="cap">This season presented by</div>
-      <div class="who">Mulligan Headcovers</div>
-      <div class="meta">Shown on the league page, every leaderboard, and the season recap</div>
-    </div>
-
-    <div class="section-label">A full league, not a spreadsheet</div>
-    <table class="feat">
-      <tr><td class="tick">✓</td><td class="name">Order-of-Merit standings</td><td class="desc">Season-long points across every event, with drop-weeks and a finalized champion. Sponsor branding on the standings page.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Side games built in</td><td class="desc">Skins, Wolf, Nassau, Vegas, Bingo-Bango-Bongo, Match Play, Stableford — run real competition without a side spreadsheet.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Handicaps that keep it fair</td><td class="desc">A WHS-style Golf Sync Index per player (GHIN import supported) so all-skill-levels nights stay competitive.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Live leaderboards + league chat</td><td class="desc">Real-time scoring on the bay TV and in players' pockets, plus a league chat to rally the group.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Dues, collected</td><td class="desc">Players pay league dues in-app; you skip the Venmo chase. (Fees pass to the player — no cost to you.)</td></tr>
-    </table>
-
-    <div class="pullquote">
-      "It was our best winter league yet — and the sponsor got their name in front of every golfer, every week."
-      <div class="by">— the kind of recap Golf Sync writes for you, automatically</div>
-    </div>
-
-    ${cta(
-      "Walk through a full league",
-      "https://golfsync.io/league/demo",
-      qrLeague,
-      "Standings, side games, the live board, and season-long sponsor placement — exactly how you'd run yours."
-    )}
-    <p class="note">Sample layout. Standings scheme, side games, and sponsor are configurable per league.</p>
-  `,
+    <p><strong>We're both proud Richmond golf brands.</strong></p>
+    <p>Golf Sync powers our Summer League — the live leaderboards on the bay
+    screens, the side games, the standings you're chasing. They're a local
+    golf-tech company, and we love supporting RVA businesses like us.</p>
+    <p>Run a charity scramble or a member tournament? Golf Sync does day-of
+    tournaments <strong>starting at $100</strong>. Run a course? Put it on Golf
+    Sync <strong>starting at $200/mo</strong>. Either way, the player app is
+    <strong>free</strong>.</p>`,
+  btnLabel: "See Golf Sync for courses",
+  url: "https://golfsync.io/course-manager-demo",
+  qrSvg: qrCourse,
 });
 
-/* ─────────────────────────────────────────────────────────────
-   SHEET 3 — Course / multi-location sponsor reach (the Bag Boy story)
-   ───────────────────────────────────────────────────────────── */
-const sheet3 = page({
-  title: "Golf Sync — Course & Sponsor Reach",
-  eyebrow: "For courses & multi-location operators",
-  h1: "Put a local-brand offer in every golfer's hand — and prove it landed.",
-  sub: "Golf Sync turns your bays and your scorecard into sponsor real estate, with a scan-to-shop code you can actually track.",
+const m2_sheet = sheet({
+  title: "IGRVA × Golf Sync — Mid-Season (sheet)",
+  eyebrow: "Indoor Golf RVA Summer League · Sponsor feature",
+  h1: "Two proud Richmond golf brands — Indoor Golf RVA &amp; Golf Sync.",
+  sub: "A sample mid-season sponsor feature: who Golf Sync is, and what they offer leagues and courses.",
   body: `
-    <div class="section-label">A promo code that earns its keep</div>
+    <div class="section-label">Meet our league sponsor</div>
     <p class="lede">
-      "Shop local, 15% off with code RVA15" is a great offer — if golfers see it
-      and you can tell it worked. Golf Sync puts a sponsor's offer
-      <strong>on the scorecard and on a scannable code at the bay</strong>, then
-      shows you the scans, so the next sponsor conversation starts with a number.
+      The live leaderboards on our bay screens, the side games, the season
+      standings — that's all <strong>Golf Sync</strong>, a Richmond-built golf-tech
+      company and our Summer League sponsor. If you run golf, here's what they do.
     </p>
-
     <table class="compare"><tr>
-      <td><div class="card hand">
-        <h4>A code in an email</h4>
-        <p>One send, no idea who saw it, no proof for the sponsor beyond "we mentioned you."</p>
+      <td><div class="card gs">
+        <h4>For leagues &amp; tournaments</h4>
+        <p>Live scoring, leaderboards on the TV, side games, standings, sponsor recognition, post-event recap. Tournament days <b>start at $100</b>.</p>
       </div></td>
       <td><div class="card gs">
-        <h4>A code golfers scan in the bay</h4>
-        <p>The offer rides the scorecard + a QR at the screen. Every scan is counted — real proof you reached their buyers.</p>
+        <h4>For courses</h4>
+        <p>Your course on the player's phone — scorecard, deals/offers, live leaderboards you broadcast. <b>Starts at $200/mo</b>.</p>
       </div></td>
     </tr></table>
-
-    <div class="sponsor-strip">
-      <div class="cap">At the turn &nbsp;•&nbsp; Presented by</div>
-      <div class="who">Bag Boy</div>
-      <div class="meta">"15% off the Nitron push cart — code RVA15" &nbsp;·&nbsp; scan-to-shop on every bay</div>
-    </div>
-
-    <div class="section-label">For the course / operator</div>
+    <div class="section-label">What golfers get</div>
     <table class="feat">
-      <tr><td class="tick">✓</td><td class="name">Scorecard-first player experience</td><td class="desc">Your course on the player's phone during the round — the natural place to layer a sponsor offer or a turn coupon.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Per-hole signage + scan-to-shop QR</td><td class="desc">Branded hole signs and bay screens carry the sponsor's logo and a trackable code.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Saved offers &amp; turn coupons <span style="color:var(--muted);font-weight:600;">(rolling out)</span></td><td class="desc">Golfers save a deal to redeem later — recurring value for a local-brand sponsor.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Multi-location ready</td><td class="desc">Run the same sponsor across every location — Scott's Addition, Rocketts Landing, wherever you are next.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Tracked impressions &amp; scans</td><td class="desc">Hand the sponsor a number: how many golfers saw the brand and scanned the code.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">The app is free</td><td class="desc">Players score, follow the leaderboard, and play side games at no cost.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Fair, all-skill-levels play</td><td class="desc">A WHS-style Golf Sync Index (GHIN import supported) keeps mixed nights competitive.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Works in the bay or on the course</td><td class="desc">Same app for indoor league nights and a real round outside.</td></tr>
     </table>
-
-    ${cta(
-      "Tour the Course Manager demo",
+    ${sheetCta(
+      "Tour Golf Sync for courses",
       "https://golfsync.io/course-manager-demo",
       qrCourse,
-      "See the player scorecard, sponsor placements, and the scan-to-shop offer flow for a managed course."
+      "See the player scorecard, course deals, and live-leaderboard broadcast. Starts at $200/mo."
     )}
-    <p class="note">Sample layout. Items marked "rolling out" are in active development. Offers, codes, and locations are configurable.</p>
+    <p class="note">Sample content for Indoor Golf RVA. Pricing shown is Golf Sync's published starting points.</p>
+  `,
+});
+
+/* =================================================================
+   MOMENT 3 — SEASON RECAP  (their Mulligan "best season yet" shape)
+   ================================================================= */
+const m3_email = emailBlock({
+  title: "IGRVA × Golf Sync — Season Recap",
+  usage: "DRAFT for Indoor Golf RVA's newsletter — end-of-season thank-you to the league sponsor. Edit freely.",
+  pills: ["Leagues", "Tournaments", "Courses"],
+  h2: "That's a wrap — our best Summer League yet. Thank you, Golf Sync!",
+  body: `
+    <p>What a season. Thanks to <strong>Golf Sync</strong> for sponsoring it and
+    keeping every leaderboard, side game, and standings race running all summer
+    on the app you played in.</p>
+    <p>If you caught the side-game bug or want to run your own event, Golf Sync is
+    the team to call. Tournament days <strong>start at $100</strong>, courses
+    <strong>start at $200/mo</strong>, and it's always <strong>free</strong> to
+    play. Support local — they're an RVA company, just like us.</p>`,
+  btnLabel: "Start a league or tournament",
+  url: "https://golfsync.io/league/demo",
+  qrSvg: qrLeague,
+});
+
+const m3_sheet = sheet({
+  title: "IGRVA × Golf Sync — Season Recap (sheet)",
+  eyebrow: "Indoor Golf RVA Summer League · Season recap",
+  h1: "Our best Summer League yet — powered &amp; sponsored by Golf Sync.",
+  sub: "A sample end-of-season thank-you featuring the league sponsor, with the numbers to show for it.",
+  body: `
+    <div class="section-label">The season, by the numbers</div>
+    <table class="metrics"><tr>
+      <td><div class="num">14</div><div class="lbl">League nights</div></td>
+      <td><div class="num">60+</div><div class="lbl">Golfers</div></td>
+      <td><div class="num">7</div><div class="lbl">Side games</div></td>
+      <td><div class="num">$0</div><div class="lbl">Cost to play</div></td>
+    </tr></table>
+    <p class="lede">
+      Every night ran on <strong>Golf Sync</strong> — live leaderboards on the bay
+      screens, season-long standings, and side games all summer. Thank you to our
+      sponsor for making it our best season yet.
+    </p>
+    <div class="pullquote">
+      "Best winter/summer league we've run — and the scoring just worked, every night."
+      <div class="by">— the kind of recap a Golf Sync season writes for itself</div>
+    </div>
+    <div class="section-label">Run your own next season</div>
+    <table class="feat">
+      <tr><td class="tick">✓</td><td class="name">Leagues &amp; season standings</td><td class="desc">Order-of-Merit points across the season, side games, live boards. Free for players.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Tournament days — from $100</td><td class="desc">Leaderboard on the TV, sponsor recognition, post-event recap. Bring your own roster.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Course Manager — from $200/mo</td><td class="desc">Your course on every golfer's phone: scorecard, deals, broadcast leaderboards.</td></tr>
+    </table>
+    ${sheetCta(
+      "Plan your next season on Golf Sync",
+      "https://golfsync.io/league/demo",
+      qrLeague,
+      "Tour a full league — standings, side games, the live board. Tournament days start at $100."
+    )}
+    <p class="note">Sample content for Indoor Golf RVA. Replace the sample stats with your real season numbers.</p>
   `,
 });
 
 const files = [
-  ["1-contest-winners-sponsor.html", sheet1],
-  ["2-season-league-sponsorship.html", sheet2],
-  ["3-course-sponsor-reach.html", sheet3],
+  ["email-1-winners.html", m1_email],
+  ["email-2-midseason.html", m2_email],
+  ["email-3-season-recap.html", m3_email],
+  ["sheet-1-winners.html", m1_sheet],
+  ["sheet-2-midseason.html", m2_sheet],
+  ["sheet-3-season-recap.html", m3_sheet],
 ];
 for (const [name, html] of files) {
   fs.writeFileSync(path.join(dir, name), html);

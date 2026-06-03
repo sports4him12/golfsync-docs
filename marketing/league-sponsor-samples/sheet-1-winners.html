@@ -1,7 +1,5 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<title>Golf Sync — Season-Long League Sponsorship</title>
-<style>/* Golf Sync — league/course sponsor sample sheets.
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<title>IGRVA × Golf Sync — Contest Winners (sheet)</title><style>/* Golf Sync — league/course sponsor sample sheets.
    Shared print styles. Designed for "Print → Save as PDF" at US Letter.
    Brand: primary orange #C47028, navy #274e6b/#0F2A44. Emerald is
    reserved for under-par scoring only — never used as a brand accent. */
@@ -255,71 +253,190 @@ html, body {
   margin-top: 6px;
   line-height: 1.4;
 }
-</style></head>
-<body>
+
+/* ════════════════════════════════════════════════════════════
+   EMAIL-BLOCK FORMAT — mirrors Indoor Golf RVA's Mailchimp layout
+   (centered narrow column: image → paragraph → button). This is
+   drop-in content for THEIR newsletter, featuring Golf Sync in the
+   sponsor slot — same shape as their 35x70 / Mulligan / Bag Boy blocks.
+   ════════════════════════════════════════════════════════════ */
+.email-wrap {
+  width: 600px;
+  margin: 24px auto;
+  background: #fff;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.16);
+}
+@media print { .email-wrap { margin: 0 auto; box-shadow: none; } }
+
+.email-feature {
+  background: var(--navy);
+  color: #fff;
+  text-align: center;
+  padding: 34px 30px 30px;
+}
+.email-feature .gs-wordmark { justify-content: center; font-size: 26px; }
+.email-feature .gs-dot { width: 15px; height: 15px; }
+.email-feature .tagline {
+  margin-top: 12px;
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.8);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.email-feature .pills {
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.7;
+}
+.email-feature .pill {
+  display: inline-block;
+  background: rgba(196,112,40,0.22);
+  border: 1px solid var(--orange);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 12px;
+  margin: 3px 3px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.email-body {
+  padding: 26px 40px 10px;
+  text-align: center;
+}
+.email-body h2 {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 14px;
+}
+.email-body p {
+  font-size: 14px;
+  line-height: 1.62;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.email-body p strong { color: var(--navy); }
+.email-body .price {
+  background: var(--orange-soft);
+  border: 1px solid var(--orange-line);
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 4px 0 18px;
+  font-size: 13.5px;
+  color: var(--navy);
+  line-height: 1.55;
+}
+.email-body .price b { color: var(--orange); }
+
+.email-btn {
+  display: inline-block;
+  background: var(--orange);
+  color: #fff !important;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 14px;
+  padding: 13px 30px;
+  border-radius: 10px;
+  margin: 2px 0 6px;
+}
+.email-qr {
+  margin: 16px auto 4px;
+  text-align: center;
+}
+.email-qr .box {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  display: inline-block;
+}
+.email-qr .cap {
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.email-foot {
+  border-top: 2px solid var(--orange);
+  padding: 16px 40px 22px;
+  text-align: center;
+}
+.email-foot .mark { font-weight: 800; color: var(--navy); font-size: 14px; }
+.email-foot .tag { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+
+.usage-banner {
+  width: 600px;
+  margin: 0 auto 4px;
+  background: #fff8ef;
+  border: 1px dashed var(--orange-line);
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 10.5px;
+  color: #8a5a22;
+  line-height: 1.45;
+}
+@media print { .usage-banner { display: none; } }
+</style></head><body>
   <div class="sheet">
     <div class="gs-header">
       <div class="gs-wordmark"><span class="gs-dot"></span>Golf Sync</div>
-      <div class="gs-eyebrow">For league operators</div>
-      <div class="gs-h1">One sponsor, recognized all season — not just in one email.</div>
-      <div class="gs-sub">Run the whole league on Golf Sync: standings, side games, and a sponsor whose brand shows up every week the league is live.</div>
+      <div class="gs-eyebrow">Indoor Golf RVA Summer League · Sponsor feature</div>
+      <div class="gs-h1">Closest to the pin: James D &amp; Luke P — scored live on Golf Sync.</div>
+      <div class="gs-sub">A sample of how Indoor Golf RVA features its league sponsor, Golf Sync, in a winners shout-out.</div>
     </div>
     <div class="gs-body">
-      
-    <div class="section-label">Give a season sponsor season-long value</div>
+    <div class="section-label">This week in the league</div>
     <p class="lede">
-      A sponsor who backs the whole winter league deserves more than one thank-you
-      post. With Golf Sync, <strong>their banner runs across the season</strong> —
-      on every leaderboard, the standings page, and the wrap-up recap that proves
-      how many golfers they reached.
+      Our closest-to-the-pin contest was scored in the <strong>Golf Sync</strong>
+      app and shown on the bay leaderboard the moment it happened. Thanks to our
+      sponsor Golf Sync — the Richmond-built app that runs our whole Summer League.
     </p>
-
     <div class="sponsor-strip">
-      <div class="cap">This season presented by</div>
-      <div class="who">Mulligan Headcovers</div>
-      <div class="meta">Shown on the league page, every leaderboard, and the season recap</div>
+      <div class="cap">Closest to the Pin &nbsp;•&nbsp; Scored &amp; shown on</div>
+      <div class="who">Golf Sync</div>
+      <div class="meta">Winners: James D &amp; Luke P — live on the bay TV and every player's phone</div>
     </div>
-
-    <div class="section-label">A full league, not a spreadsheet</div>
+    <div class="section-label">Why we run on Golf Sync</div>
     <table class="feat">
-      <tr><td class="tick">✓</td><td class="name">Order-of-Merit standings</td><td class="desc">Season-long points across every event, with drop-weeks and a finalized champion. Sponsor branding on the standings page.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Side games built in</td><td class="desc">Skins, Wolf, Nassau, Vegas, Bingo-Bango-Bongo, Match Play, Stableford — run real competition without a side spreadsheet.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Handicaps that keep it fair</td><td class="desc">A WHS-style Golf Sync Index per player (GHIN import supported) so all-skill-levels nights stay competitive.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Live leaderboards + league chat</td><td class="desc">Real-time scoring on the bay TV and in players' pockets, plus a league chat to rally the group.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Dues, collected</td><td class="desc">Players pay league dues in-app; you skip the Venmo chase. (Fees pass to the player — no cost to you.)</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Live leaderboards &amp; contests</td><td class="desc">Standings and closest-to-the-pin update on the bay TV and in players' pockets in real time.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Side games built in</td><td class="desc">Skins, Wolf, Nassau, Vegas, Bingo-Bango-Bongo, Match Play, Stableford — no side spreadsheet.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Free for players</td><td class="desc">Everyone in the league scores on it at no cost. Organizers &amp; courses are the paid side.</td></tr>
     </table>
-
-    <div class="pullquote">
-      "It was our best winter league yet — and the sponsor got their name in front of every golfer, every week."
-      <div class="by">— the kind of recap Golf Sync writes for you, automatically</div>
+    
+  <div class="sponsor-strip" style="text-align:left;">
+    <div class="cap">About our sponsor</div>
+    <div style="font-size:13px;line-height:1.55;color:var(--navy);margin-top:4px;">
+      <strong>Golf Sync</strong> is the app powering our league — <b style="color:var(--orange)">free for every player</b>.
+      Run an event <b style="color:var(--orange)">starting at $100</b>, or put a whole course on it
+      <b style="color:var(--orange)">starting at $200/mo</b>.
     </div>
-
+  </div>
     
   <table style="width:100%;border-collapse:collapse;background:var(--navy);border-radius:16px;margin-bottom:4px;">
     <tr>
       <td style="padding:16px 22px;vertical-align:middle;">
         <div style="text-transform:uppercase;letter-spacing:1.8px;font-size:9.5px;font-weight:800;color:var(--orange);margin-bottom:6px;">See it live</div>
-        <div style="font-size:17px;font-weight:800;color:#fff;line-height:1.22;margin-bottom:5px;">Walk through a full league</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.8);line-height:1.42;margin-bottom:9px;max-width:330px;">Standings, side games, the live board, and season-long sponsor placement — exactly how you'd run yours.</div>
+        <div style="font-size:17px;font-weight:800;color:#fff;line-height:1.22;margin-bottom:5px;">Run your own league or tournament</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.8);line-height:1.42;margin-bottom:9px;max-width:330px;">Tour a live league on Golf Sync — leaderboards, contests, side games. Tournament days start at $100.</div>
         <a href="https://golfsync.io/league/demo" style="font-size:12.5px;font-weight:800;color:#fff;background:var(--orange);text-decoration:none;padding:8px 15px;border-radius:9px;display:inline-block;">golfsync.io/league/demo</a>
       </td>
       <td style="width:112px;padding:14px 20px 14px 0;text-align:center;vertical-align:middle;">
         <div style="background:#fff;border-radius:10px;padding:7px;display:inline-block;"><svg width="84" height="84" style="display:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29" shape-rendering="crispEdges"><path fill="#FFFFFF" d="M0 0h29v29H0z"/><path stroke="#0F2A44" d="M0 0.5h7m1 0h1m6 0h2m1 0h3m1 0h7M0 1.5h1m5 0h1m1 0h2m4 0h2m1 0h1m4 0h1m5 0h1M0 2.5h1m1 0h3m1 0h1m2 0h1m2 0h4m2 0h3m1 0h1m1 0h3m1 0h1M0 3.5h1m1 0h3m1 0h1m1 0h2m1 0h1m4 0h2m4 0h1m1 0h3m1 0h1M0 4.5h1m1 0h3m1 0h1m2 0h3m1 0h1m3 0h1m1 0h1m2 0h1m1 0h3m1 0h1M0 5.5h1m5 0h1m7 0h1m2 0h3m2 0h1m5 0h1M0 6.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M8 7.5h2m1 0h4m2 0h2M0 8.5h1m1 0h2m1 0h3m2 0h2m1 0h2m1 0h3m3 0h1m2 0h1m1 0h2M0 9.5h2m1 0h1m1 0h1m2 0h1m2 0h2m2 0h2m2 0h2m1 0h3m3 0h1M1 10.5h1m2 0h1m1 0h1m2 0h2m1 0h1m1 0h2m1 0h2m4 0h2m1 0h2M0 11.5h1m1 0h3m2 0h1m4 0h4m2 0h1m1 0h2m1 0h1m4 0h1M3 12.5h1m1 0h2m1 0h1m7 0h2m1 0h1m5 0h2M1 13.5h1m1 0h1m3 0h2m1 0h4m3 0h1m1 0h4m3 0h3M2 14.5h2m2 0h2m1 0h3m2 0h1m3 0h3m5 0h3M0 15.5h5m3 0h2m1 0h1m1 0h1m1 0h1m3 0h2m2 0h1m3 0h1M0 16.5h1m1 0h1m3 0h1m4 0h1m7 0h3m1 0h3m1 0h1M1 17.5h1m1 0h1m3 0h1m1 0h1m1 0h3m3 0h1m2 0h1m2 0h1m1 0h3M0 18.5h1m3 0h1m1 0h1m1 0h1m1 0h3m4 0h1m2 0h1m1 0h2m2 0h1M2 19.5h3m2 0h2m1 0h2m3 0h4m1 0h1m1 0h1m1 0h1m1 0h1M1 20.5h3m2 0h1m1 0h1m1 0h4m1 0h4m1 0h7M8 21.5h2m1 0h5m2 0h1m1 0h1m3 0h5M0 22.5h7m1 0h2m1 0h3m2 0h5m1 0h1m1 0h2m1 0h1M0 23.5h1m5 0h1m1 0h1m6 0h1m4 0h1m3 0h2m1 0h1M0 24.5h1m1 0h3m1 0h1m3 0h2m2 0h1m2 0h1m2 0h5m1 0h1m1 0h1M0 25.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h5m3 0h1m1 0h3m1 0h1M0 26.5h1m1 0h3m1 0h1m1 0h6m4 0h1m1 0h1m2 0h1m2 0h1m1 0h1M0 27.5h1m5 0h1m3 0h1m2 0h4m3 0h2m1 0h1m1 0h1m1 0h1M0 28.5h7m1 0h1m5 0h2m2 0h1m1 0h3m4 0h1"/></svg>
 </div>
-        <div style="font-size:9px;color:rgba(255,255,255,0.65);margin-top:5px;letter-spacing:0.5px;">SCAN TO TOUR</div>
+        <div style="font-size:9px;color:rgba(255,255,255,0.65);margin-top:5px;letter-spacing:0.5px;">SCAN TO EXPLORE</div>
       </td>
     </tr>
   </table>
-    <p class="note">Sample layout. Standings scheme, side games, and sponsor are configurable per league.</p>
-  
-    </div>
-    
-  <div class="gs-footer">
-    <div class="row">
-      <div class="mark"><span class="gs-dot"></span>Golf Sync</div>
-      <div class="cta">golfsync.io</div>
-    </div>
-    <div class="tag" style="margin-top:6px;">Run your league. Show your sponsors love. All in one place.</div>
+    <p class="note">Sample content for Indoor Golf RVA. Swap in real winners/photos before sending.</p>
   </div>
+    <div class="gs-footer">
+      <div class="row"><div class="mark"><span class="gs-dot"></span>Golf Sync</div><div class="cta">golfsync.io</div></div>
+      <div class="tag" style="margin-top:6px;">Proud sponsor of the Indoor Golf RVA Summer League · Leagues, tournaments &amp; courses, one app.</div>
+    </div>
   </div>
 </body></html>

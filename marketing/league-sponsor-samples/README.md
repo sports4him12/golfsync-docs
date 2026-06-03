@@ -1,41 +1,52 @@
-# League / Course sponsor sample sheets
+# Indoor Golf RVA × Golf Sync — sponsor content samples
 
-Three one-page sample sell sheets for the Indoor Golf RVA–type audience
-(simulator businesses that run **leagues** and want to show their
-**sponsors** love), each modeled on a real sponsor shout-out they'd
-otherwise build by hand in Mailchimp. Emphasis: **Leagues** and
-**Courses**.
+Golf Sync sponsors the **Indoor Golf RVA Summer League**. Indoor Golf RVA
+already runs polished sponsor shout-outs in their Mailchimp newsletter
+(35x70, Mulligan Headcovers, Bag Boy). These are **samples of that same
+content with Golf Sync in the sponsor slot** — drop-in drafts they can
+publish to feature us, written in their voice, talking to their golfers.
 
-| File | Story | Modeled on | Demo CTA |
+**Angle:** emphasize **Leagues** and **Courses** (what resonates with a
+simulator/league operator + their audience). Pricing shown as starting
+points — **tournament days from $100, Course Manager from $200/mo** —
+and the **player app is free**. Each piece has a clickable demo link + QR.
+
+## The six files — 3 moments × 2 formats
+
+| Moment | Email block (their newsletter) | One-page sheet (leave-behind) | Demo CTA |
 |---|---|---|---|
-| `1-contest-winners-sponsor` | Closest-to-the-pin winners + sponsor recognition, automated | 35x70 CTP email | `golfsync.io/league/demo` |
-| `2-season-league-sponsorship` | One sponsor recognized all season (standings, side games, recap) | Mulligan Headcovers season thank-you | `golfsync.io/league/demo` |
-| `3-course-sponsor-reach` | Trackable scan-to-shop offer on the scorecard / bay | Bag Boy promo-code email | `golfsync.io/course-manager-demo` |
+| **Contest winners** (their 35x70 shape) | `email-1-winners` | `sheet-1-winners` | league/demo |
+| **Mid-season feature** (their Bag Boy "two RVA brands" shape) | `email-2-midseason` | `sheet-2-midseason` | course-manager-demo |
+| **Season recap** (their Mulligan "best season yet" shape) | `email-3-season-recap` | `sheet-3-season-recap` | league/demo |
 
-Each sheet has a **QR code + clickable demo link** so the reader has an
-action to take (scan in person, click in email).
+- **Email blocks** = 600px centered column (image/header → paragraph →
+  button), matching their Mailchimp layout. Paste the copy into a
+  Mailchimp block, or screenshot/embed.
+- **Sheets** = polished one-page PDF (header → feature → checklist →
+  pricing → demo CTA). Good as an attachment or printed leave-behind.
 
-## Using them
-- **Send as PDF:** the `.pdf` files are ready to attach/email.
-- **Edit then re-export:** edit copy in `build.js` (or styles in
-  `_shared.css`), then:
+## Using / editing
+- The `.pdf` files are ready to send. To edit, change copy in `build.js`
+  (one place — `PRICE_LINE`, the three moments), then:
   ```
-  node build.js                      # regenerates the .html files
-  # open each .html → Print → Save as PDF (Letter), or headless Chrome:
+  node build.js          # regenerates all 6 .html files
+  # then print each .html → Save as PDF, or headless Chrome:
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
     --headless --disable-gpu --no-pdf-header-footer \
-    --print-to-pdf=1-contest-winners-sponsor.pdf \
-    "file://$PWD/1-contest-winners-sponsor.html"
+    --print-to-pdf=email-1-winners.pdf "file://$PWD/email-1-winners.html"
   ```
-- **QR codes** (`qr-*.svg`) are regenerated from the demo URLs with the
-  `qrcode` npm package; inlined into the HTML by `build.js`.
+- QR codes (`qr-*.svg`) regenerate from the demo URLs via the `qrcode`
+  npm package; inlined by `build.js`.
 
 ## Notes
-- On brand: primary orange `#C47028`, navy `#0F2A44`. Emerald is NOT
-  used (reserved for under-par scoring in the product).
-- Every feature claim maps to a shipped Golf Sync capability. The one
-  forward-looking item (Course Manager saved offers / turn coupons) is
-  explicitly marked **"rolling out"** on sheet 3 — keep that honest.
-- These are HTML→PDF (print path), independent of the product's
-  server-side openhtmltopdf renderer, so normal CSS (flex/grid) is fine
-  here.
+- **Voice = Indoor Golf RVA**, not Golf Sync. First person ("our league,"
+  "thanks to our sponsor"). These are theirs to publish.
+- **Pricing:** "starting at $100/event" + "$200/mo" + "free for players."
+  This is a deliberate "starting at" framing for warm sponsor content;
+  the product landing pages use the firmer "$100/event" offer framing per
+  the locked B2B pricing note — keep that distinction if repurposing.
+- On brand: orange `#C47028`, navy `#0F2A44`, no emerald.
+- Sample stats/winners are placeholders — swap in real ones before sending.
+- ⚠️ Confirm the two demo pages (`golfsync.io/league/demo`,
+  `golfsync.io/course-manager-demo`) are live + polished before sending —
+  they're the call to action.
