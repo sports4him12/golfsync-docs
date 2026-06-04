@@ -8,7 +8,10 @@
    Three moments: contest winners, mid-season feature, season recap.
 
    Voice = Indoor Golf RVA talking to THEIR golfers about their sponsor.
-   Angle = Leagues + Courses, "starting at" pricing, golfer app free.
+   Angle = LEAGUES — running a league on Golf Sync is FREE, free for
+   players, with a deep format menu (Stroke/Stableford/Match Play/Skins/
+   Wolf/Vegas/Nassau/BBB + team scrambles). Tournament days from $100 are
+   the only paid mention; the Course Manager angle was removed 2026-06-03.
    Run: node build.js */
 const fs = require("fs");
 const path = require("path");
@@ -16,7 +19,8 @@ const dir = __dirname;
 
 const css = fs.readFileSync(path.join(dir, "_shared.css"), "utf8");
 const qrLeague = fs.readFileSync(path.join(dir, "qr-league-demo.svg"), "utf8");
-const qrCourse = fs.readFileSync(path.join(dir, "qr-course-manager-demo.svg"), "utf8");
+// qr-course-manager-demo.svg intentionally no longer used — all CTAs now
+// point to the league demo (Course Manager angle removed 2026-06-03).
 const qr = (svg, px) => svg.replace("<svg ", `<svg width="${px}" height="${px}" style="display:block" `);
 
 // Real Golf Sync wordmark SVGs (white for navy headers, color for light
@@ -36,9 +40,16 @@ function logo(variant, height) {
 }
 
 const PRICE_LINE =
-  'Golf Sync is <b>free for players</b> — that\'s the league app you\'re scoring on. ' +
-  'For organizers, run a tournament day <b>starting at $100/event</b>. ' +
-  'For courses, add a digital player experience <b>starting at $200/mo</b>.';
+  '<b>Running a league on Golf Sync is free</b>, and it\'s <b>free for every player</b> — ' +
+  'live leaderboards, season standings, and a deep menu of formats and side games at no cost. ' +
+  'Hosting a one-day tournament? Those start at just <b>$100/event</b>.';
+
+// The format menu — the league differentiator. Real, shipped formats
+// (see golfsync.io/formats). Used across the league-focused pieces.
+const FORMATS_INLINE =
+  'Stroke Play, Stableford, Modified Stableford, Chicago, Match Play, ' +
+  'Skins, Wolf, Vegas, Nassau, Bingo-Bango-Bongo, plus team formats like ' +
+  'Scramble, Best Ball and Alternate Shot';
 
 /* ───────────────────────── EMAIL BLOCKS ───────────────────────── */
 function emailBlock({ title, pills, h2, body, btnLabel, url, qrSvg, usage }) {
@@ -64,7 +75,7 @@ function emailBlock({ title, pills, h2, body, btnLabel, url, qrSvg, usage }) {
     <div class="email-foot">
       <div style="display:flex;justify-content:center;margin-bottom:8px;">${logo("color", 26)}</div>
       <div class="mark" style="font-size:12px;color:var(--muted);">golfsync.io</div>
-      <div class="tag">Leagues, tournaments &amp; courses — one app. Free for players.</div>
+      <div class="tag">Free leagues &amp; live scoring — one app. Free for players.</div>
     </div>
   </div>
 </body></html>`;
@@ -84,7 +95,7 @@ function sheet({ title, eyebrow, h1, sub, body }) {
     <div class="gs-body">${body}</div>
     <div class="gs-footer">
       <div class="row"><div style="display:flex;align-items:center;">${logo("color", 22)}</div><div class="cta">golfsync.io</div></div>
-      <div class="tag" style="margin-top:6px;">Proud sponsor of the Indoor Golf RVA Summer League · Leagues, tournaments &amp; courses, one app.</div>
+      <div class="tag" style="margin-top:6px;">Proud sponsor of the Indoor Golf RVA Summer League · Free leagues &amp; live scoring, one app.</div>
     </div>
   </div>
 </body></html>`;
@@ -112,9 +123,11 @@ const priceCardSheet = `
   <div class="sponsor-strip" style="text-align:left;">
     <div class="cap">About our sponsor</div>
     <div style="font-size:13px;line-height:1.55;color:var(--navy);margin-top:4px;">
-      <strong>Golf Sync</strong> is the app powering our league — <b style="color:var(--orange)">free for every player</b>.
-      Run an event <b style="color:var(--orange)">starting at $100</b>, or add a digital player
-      experience to your course <b style="color:var(--orange)">starting at $200/mo</b>.
+      <strong>Golf Sync</strong> is the app powering our league — and
+      <b style="color:var(--orange)">running a league on it is free</b>,
+      <b style="color:var(--orange)">free for every player</b> too. Live leaderboards,
+      season standings, and a deep format menu at no cost. Hosting a one-day tournament
+      runs <b style="color:var(--orange)">just $100</b>.
     </div>
   </div>`;
 
@@ -124,7 +137,7 @@ const priceCardSheet = `
 const m1_email = emailBlock({
   title: "IGRVA × Golf Sync — Contest Winners",
   usage: "DRAFT for Indoor Golf RVA's newsletter — featuring Golf Sync as league sponsor. Swap in your real winners; edit freely.",
-  pills: ["Leagues", "Tournaments", "Courses"],
+  pills: ["Leagues", "Free to play", "10+ formats"],
   h2: "Congrats to our closest-to-the-pin winners — James D &amp; Luke P!",
   body: `
     <p>Huge thanks to <strong>Golf Sync</strong> for sponsoring our Summer League.
@@ -132,8 +145,10 @@ const m1_email = emailBlock({
     closest-to-the-pin results went up on the bay leaderboard the second they
     happened — winners and all.</p>
     <p>Golf Sync is a Richmond golf-tech company building the app that runs
-    leagues like ours. If you organize a tournament or run a course, they're
-    worth a look — and for you, the player, it's <strong>free</strong>.</p>`,
+    leagues like ours — and <strong>running a league on it is free</strong>, with a
+    deep menu of formats and side games built in (${FORMATS_INLINE}). If you've got
+    a weekend group, it's the easiest way to run your own season — and for every
+    player, it's <strong>free</strong>.</p>`,
   btnLabel: "Explore Golf Sync for your league",
   url: "https://golfsync.io/league/demo",
   qrSvg: qrLeague,
@@ -159,15 +174,15 @@ const m1_sheet = sheet({
     <div class="section-label">Why we run on Golf Sync</div>
     <table class="feat">
       <tr><td class="tick">✓</td><td class="name">Live leaderboards &amp; contests</td><td class="desc">Standings and closest-to-the-pin update on the bay TV and in players' pockets in real time.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Side games built in</td><td class="desc">Skins, Wolf, Nassau, Vegas, Bingo-Bango-Bongo, Match Play, Stableford — no side spreadsheet.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Free for players</td><td class="desc">Everyone in the league scores on it at no cost. Organizers &amp; courses are the paid side.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">A format for every group</td><td class="desc">Stroke, Stableford, Modified Stableford, Chicago, Match Play, Skins, Wolf, Vegas, Nassau, Bingo-Bango-Bongo — plus team scrambles. No side spreadsheet.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Free to run, free to play</td><td class="desc">Running a league costs nothing and every player scores at no cost. (Optional one-day tournaments start at $100.)</td></tr>
     </table>
     ${priceCardSheet}
     ${sheetCta(
-      "Run your own league or tournament",
+      "Run your own free league",
       "https://golfsync.io/league/demo",
       qrLeague,
-      "Tour a live league on Golf Sync — leaderboards, contests, side games. Tournament days start at $100."
+      "Tour a live league on Golf Sync — leaderboards, season standings, and a deep menu of formats and side games. Free to run, free to play."
     )}
     <p class="note">Sample content for Indoor Golf RVA. Swap in real winners/photos before sending.</p>
   `,
@@ -179,55 +194,61 @@ const m1_sheet = sheet({
 const m2_email = emailBlock({
   title: "IGRVA × Golf Sync — Mid-Season",
   usage: "DRAFT for Indoor Golf RVA's newsletter — mid-season sponsor feature. Edit freely.",
-  pills: ["Built in RVA", "Leagues", "Courses"],
+  pills: ["Built in RVA", "Free leagues", "10+ formats"],
   h2: "What do Indoor Golf RVA and Golf Sync have in common?",
   body: `
     <p><strong>We're both proud Richmond golf brands.</strong></p>
     <p>Golf Sync powers our Summer League — the live leaderboards on the bay
     screens, the side games, the standings you're chasing. They're a local
     golf-tech company, and we love supporting RVA businesses like us.</p>
-    <p>Run a charity scramble or a member tournament? Golf Sync does day-of
-    tournaments <strong>starting at $100</strong>. Run a course? Put it on Golf
-    Sync <strong>starting at $200/mo</strong>. Either way, the player app is
-    <strong>free</strong>.</p>`,
-  btnLabel: "See Golf Sync for courses",
-  url: "https://golfsync.io/course-manager-demo",
-  qrSvg: qrCourse,
+    <p>Got a weekend group, a work crew, or a buddies' game? <strong>Running your
+    own league on Golf Sync is free</strong> — and so is playing. Pick from a deep
+    menu of formats and side games (${FORMATS_INLINE}) and let the app handle the
+    scoring. (Hosting a one-day charity or member tournament? Those start at just
+    <strong>$100/event</strong>.)</p>`,
+  btnLabel: "Start your free league",
+  url: "https://golfsync.io/league/demo",
+  qrSvg: qrLeague,
 });
 
 const m2_sheet = sheet({
   title: "IGRVA × Golf Sync — Mid-Season (sheet)",
   eyebrow: "Indoor Golf RVA Summer League · Sponsor feature",
   h1: "Two proud Richmond golf brands — Indoor Golf RVA &amp; Golf Sync.",
-  sub: "A sample mid-season sponsor feature: who Golf Sync is, and what they offer leagues and courses.",
+  sub: "A sample mid-season sponsor feature: who Golf Sync is, and why running your own league on it is free.",
   body: `
     <div class="section-label">Meet our league sponsor</div>
     <p class="lede">
       The live leaderboards on our bay screens, the side games, the season
       standings — that's all <strong>Golf Sync</strong>, a Richmond-built golf-tech
-      company and our Summer League sponsor. If you run golf, here's what they do.
+      company and our Summer League sponsor. The best part for you:
+      <strong>running your own league on it is completely free</strong>.
     </p>
     <table class="compare"><tr>
       <td><div class="card gs">
-        <h4>For leagues &amp; tournaments</h4>
-        <p>Live scoring, leaderboards on the TV, side games, standings, sponsor recognition, post-event recap. Tournament days <b>start at $100</b>.</p>
+        <h4>Leagues — free</h4>
+        <p>Run your own season at no cost: live leaderboards on the TV, season-long standings, side games, sponsor recognition. <b>Free to run, free to play.</b></p>
       </div></td>
       <td><div class="card gs">
-        <h4>For courses</h4>
-        <p>A digital player experience for your golfers during the round — live scorecard, deals &amp; offers, on-property leaderboards. <b>Starts at $200/mo</b>.</p>
+        <h4>Tournament days — from $100</h4>
+        <p>Hosting a one-off charity scramble or member event? Same live scoring + leaderboard-on-the-TV, <b>starting at $100/event</b>. Bring your own roster.</p>
       </div></td>
     </tr></table>
-    <div class="section-label">What golfers get</div>
+    <div class="section-label">A format for every group</div>
+    <p class="lede" style="margin-bottom:10px;">
+      Pick how your group plays — Golf Sync handles the math and the side pots:
+    </p>
     <table class="feat">
-      <tr><td class="tick">✓</td><td class="name">The app is free</td><td class="desc">Players score, follow the leaderboard, and play side games at no cost.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Fair, all-skill-levels play</td><td class="desc">A WHS-style Golf Sync Index (GHIN import supported) keeps mixed nights competitive.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Works in the bay or on the course</td><td class="desc">Same app for indoor league nights and a real round outside.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Individual</td><td class="desc">Stroke Play, Stableford, Modified Stableford, Chicago, Match Play.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Side games</td><td class="desc">Skins, Wolf, Vegas, Nassau, Bingo-Bango-Bongo — pots tracked automatically, no spreadsheet.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Team</td><td class="desc">Scramble, Best Ball, Alternate Shot for the nights you go 2- or 4-person.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Fair across skill levels</td><td class="desc">A WHS-style Golf Sync Index (GHIN import supported) keeps mixed groups competitive.</td></tr>
     </table>
     ${sheetCta(
-      "Tour Golf Sync for courses",
-      "https://golfsync.io/course-manager-demo",
-      qrCourse,
-      "See the digital player experience — live scorecard, course deals, on-property leaderboards. Starts at $200/mo."
+      "Start your own free league",
+      "https://golfsync.io/league/demo",
+      qrLeague,
+      "Tour a live league on Golf Sync — leaderboards, season standings, and a deep menu of formats and side games. Free to run, free to play."
     )}
     <p class="note">Sample content for Indoor Golf RVA. Pricing shown is Golf Sync's published starting points.</p>
   `,
@@ -239,16 +260,17 @@ const m2_sheet = sheet({
 const m3_email = emailBlock({
   title: "IGRVA × Golf Sync — Season Recap",
   usage: "DRAFT for Indoor Golf RVA's newsletter — end-of-season thank-you to the league sponsor. Edit freely.",
-  pills: ["Leagues", "Tournaments", "Courses"],
+  pills: ["Free leagues", "Season standings", "10+ formats"],
   h2: "That's a wrap — our best Summer League yet. Thank you, Golf Sync!",
   body: `
     <p>What a season. Thanks to <strong>Golf Sync</strong> for sponsoring it and
     keeping every leaderboard, side game, and standings race running all summer
     on the app you played in.</p>
-    <p>If you caught the side-game bug or want to run your own event, Golf Sync is
-    the team to call. Tournament days <strong>start at $100</strong>, courses
-    <strong>start at $200/mo</strong>, and it's always <strong>free</strong> to
-    play. Support local — they're an RVA company, just like us.</p>`,
+    <p>Caught the side-game bug? Start your own group next season —
+    <strong>running a league on Golf Sync is free</strong>, it's <strong>free to
+    play</strong>, and the format menu is deep (${FORMATS_INLINE}). Hosting a
+    one-day event runs just <strong>$100</strong>. Support local — they're an RVA
+    company, just like us.</p>`,
   btnLabel: "Start a league or tournament",
   url: "https://golfsync.io/league/demo",
   qrSvg: qrLeague,
@@ -276,17 +298,17 @@ const m3_sheet = sheet({
       "Best winter/summer league we've run — and the scoring just worked, every night."
       <div class="by">— the kind of recap a Golf Sync season writes for itself</div>
     </div>
-    <div class="section-label">Run your own next season</div>
+    <div class="section-label">Run your own next season — free</div>
     <table class="feat">
-      <tr><td class="tick">✓</td><td class="name">Leagues &amp; season standings</td><td class="desc">Order-of-Merit points across the season, side games, live boards. Free for players.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Tournament days — from $100</td><td class="desc">Leaderboard on the TV, sponsor recognition, post-event recap. Bring your own roster.</td></tr>
-      <tr><td class="tick">✓</td><td class="name">Course Manager — from $200/mo</td><td class="desc">A digital player experience for your golfers: live scorecard, deals &amp; offers, on-property leaderboards.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Free leagues &amp; season standings</td><td class="desc">Order-of-Merit points across the season, side games, live boards. Free to run, free to play.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">A format for every group</td><td class="desc">Stroke, Stableford, Modified Stableford, Chicago, Match Play, Skins, Wolf, Vegas, Nassau, Bingo-Bango-Bongo — plus team scrambles.</td></tr>
+      <tr><td class="tick">✓</td><td class="name">Tournament days — from $100</td><td class="desc">Hosting a one-day event? Leaderboard on the TV, sponsor recognition, post-event recap. Bring your own roster.</td></tr>
     </table>
     ${sheetCta(
       "Plan your next season on Golf Sync",
       "https://golfsync.io/league/demo",
       qrLeague,
-      "Tour a full league — standings, side games, the live board. Tournament days start at $100."
+      "Tour a full league — standings, side games, and a deep format menu on the live board. Free to run, free to play."
     )}
     <p class="note">Sample content for Indoor Golf RVA. Replace the sample stats with your real season numbers.</p>
   `,
